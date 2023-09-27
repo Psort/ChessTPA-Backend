@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: discovery-server
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_NAME}
+    password: ${JDBC_DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+server:
+  port: 8761
+
+
+
+
+
