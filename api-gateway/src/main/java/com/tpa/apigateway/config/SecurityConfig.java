@@ -15,7 +15,7 @@ public class SecurityConfig {
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
         http
                 .authorizeExchange((authorize) -> authorize
-                        .pathMatchers("/eureka/**")
+                        .pathMatchers("/eureka/**","/api/auth/**")
                         .permitAll()
                         .anyExchange().authenticated()
                 )

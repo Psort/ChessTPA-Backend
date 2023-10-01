@@ -1,0 +1,15 @@
+#keycloak
+keycloak:
+  realm: Chess-TPA
+  auth-server-url: http://localhost:8181
+  ssl-required: external
+  resource: chess-tpa
+  credentials:
+    secret: G0RdDFMqSy2guddO7Vlu2EltMJDRDfET
+  use-resource-role-mappings: true
+  bearer-only: true
+
+server:
+  port: 8082
+  application:
+    name: useracces-service

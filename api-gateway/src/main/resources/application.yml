@@ -5,7 +5,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8181/realms/spring-boot-microservice-realm
+          issuer-uri: http://localhost:8181/realms/Chess-TPA
   cloud:
     gateway:
       routes[0]:
