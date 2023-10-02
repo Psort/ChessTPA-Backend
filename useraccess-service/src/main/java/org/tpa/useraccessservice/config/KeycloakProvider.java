@@ -1,4 +1,4 @@
-package org.example.config;
+package org.tpa.useraccessservice.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.KeycloakBuilder;
