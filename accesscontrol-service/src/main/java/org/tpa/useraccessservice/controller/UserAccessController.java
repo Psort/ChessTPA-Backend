@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserAccessController {
     private final UserAccessService userAccessService;
 
-    @PostMapping
+    @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AccessTokenResponse> login(@RequestBody LoginRequest loginRequest){
         return userAccessService.login(loginRequest);
     }
-
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@RequestBody SignUpRequest signUpRequest){

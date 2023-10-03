@@ -15,4 +15,4 @@ server:
 
 spring:
   application:
-      name: useracces-service
+      name: accesscontrol-service
