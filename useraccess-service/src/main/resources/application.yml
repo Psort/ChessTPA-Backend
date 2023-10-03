@@ -1,11 +1,11 @@
 #keycloak
 keycloak:
-  realm: Chess-TPA
+  realm: ${KEYCLOAK_REALM}
   auth-server-url: http://localhost:8181
   ssl-required: external
-  resource: chess-tpa
+  resource: ${KEYCLOAK_RESOURCE}
   credentials:
-    secret: G0RdDFMqSy2guddO7Vlu2EltMJDRDfET
+    secret: ${KEYCLOAK_SECRET}
   use-resource-role-mappings: true
   bearer-only: true
 
