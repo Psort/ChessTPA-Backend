@@ -1,6 +1,7 @@
 package org.tpa.useraccessservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.tpa.useraccessservice.config.KeycloakProvider;
 import org.tpa.useraccessservice.dto.LoginRequest;
 import org.tpa.useraccessservice.dto.SignUpRequest;
@@ -20,6 +21,7 @@ import java.util.Collections;
 @Service
 public class UserAccessService {
     private final KeycloakProvider keycloakProvider;
+    private final WebClient.Builder webClientBuilder;
     @Value("${keycloak.realm}")
     public String realm;
 
@@ -47,6 +49,7 @@ public class UserAccessService {
         kcUser.setEmail(request.getEmail());
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
+
 
         usersResource.create(kcUser);
     }
