@@ -17,7 +17,7 @@
         <module>user-service</module>
         <module>api-gateway</module>
         <module>discovery-server</module>
-        <module>useraccess-service</module>
+        <module>accesscontrol-service</module>
     </modules>
 
     <properties>
