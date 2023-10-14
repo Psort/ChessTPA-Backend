@@ -16,8 +16,7 @@ public class ChessEngineController {
 
     private final ChessEngineService chessEngineService;
     @GetMapping
-    public Set<Move> getPossibleMoves(){
-
+    public String getPossibleMoves(){
         return chessEngineService.getPossiblesMoves("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR","g4");
     }
 }
