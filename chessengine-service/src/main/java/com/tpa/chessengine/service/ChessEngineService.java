@@ -1,14 +1,17 @@
 package com.tpa.chessengine.service;
 
+import com.chesstpa.Game;
 import com.tpa.chessengine.model.Move;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
 @Service
+@AllArgsConstructor
 public class ChessEngineService {
-
-    public Set<Move> getPossiblesMoves(String board , String pieceCoordinates) {
-        return null;
+    private final Game game;
+    public String getPossiblesMoves(String boardState,String pieceCoordinates) {
+        return game.getPossibleMovesForPosition(boardState, pieceCoordinates);
     }
 }
