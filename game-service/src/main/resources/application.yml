@@ -1,6 +1,10 @@
 spring:
   application:
     name: game-service
+  data:
+    mongodb:
+      uri: mongodb+srv://eternal:eternal@chesstpa-gamedb.phtxde6.mongodb.net/chesstpa-gamedb
+
 
 server:
   port: 8083
