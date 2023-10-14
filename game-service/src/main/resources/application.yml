@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: game-service
+
+server:
+  port: 8083
+
+
+
+
+

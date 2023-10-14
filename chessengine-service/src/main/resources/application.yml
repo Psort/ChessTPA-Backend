@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: chessengine-service
+
+server:
+  port: 8084
+
+
+
+
+

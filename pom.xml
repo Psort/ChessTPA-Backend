@@ -18,6 +18,8 @@
         <module>api-gateway</module>
         <module>discovery-server</module>
         <module>accesscontrol-service</module>
+        <module>game-service</module>
+        <module>chessengine-service</module>
     </modules>
 
     <properties>
