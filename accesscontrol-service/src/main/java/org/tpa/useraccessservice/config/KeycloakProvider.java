@@ -32,7 +32,7 @@ public class KeycloakProvider {
                 .serverUrl(serverUrl)//
                 .clientId(clientID) //
                 .clientSecret(clientSecret) //
-                .grantType("client_credentials")
+                .grantType("password")
                 .username(username) //
                 .password(password);
     }
