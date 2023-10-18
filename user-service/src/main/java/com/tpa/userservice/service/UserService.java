@@ -15,6 +15,7 @@ public class UserService {
     public void createUser(SignUpRequest request){
         User user = User.builder()
                 .email(request.getEmail())
+                .username(request.getUsername())
                 .build();
 
         userRepository.save(user);
