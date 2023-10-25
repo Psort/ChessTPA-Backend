@@ -4,11 +4,9 @@ import com.tpa.chessengine.dto.MoveRequest;
 import com.tpa.chessengine.dto.MoveResponse;
 import com.tpa.chessengine.service.ChessEngineService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -18,7 +16,7 @@ import java.util.Set;
 public class ChessEngineController {
 
     private final ChessEngineService chessEngineService;
-    @GetMapping
+    @PostMapping
     public ResponseEntity<Set<MoveResponse>> getPossibleMoves(@RequestBody MoveRequest request ){
         return chessEngineService.getPossiblesMoves(request);
     }

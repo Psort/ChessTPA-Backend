@@ -31,7 +31,7 @@ public class UserAccessService {
      * @return AccessTokenResponse
      */
     public ResponseEntity<AccessTokenResponse> login(LoginRequest loginRequest){
-        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword()).build();
+        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword()).build();
         return  ResponseEntity.status(HttpStatus.OK).body(keycloak.tokenManager().getAccessToken());
     }
 
@@ -42,9 +42,8 @@ public class UserAccessService {
     public void registerUser(SignUpRequest request){
         UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
         CredentialRepresentation credentialRepresentation = createPasswordCredentials(request.getPassword());
-
         UserRepresentation kcUser = new UserRepresentation();
-        kcUser.setUsername(request.getEmail());
+        kcUser.setUsername(request.getUsername());
         kcUser.setCredentials(Collections.singletonList(credentialRepresentation));
         kcUser.setEmail(request.getEmail());
         kcUser.setEnabled(true);
