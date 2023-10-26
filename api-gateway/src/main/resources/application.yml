@@ -9,6 +9,7 @@ spring:
   cloud:
     gateway:
       globalcors:
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
             allowedOrigins: "*"
@@ -33,3 +34,10 @@ spring:
           uri: http://localhost:8084
           predicates:
             - Path=/api/engine/**
+            - Method=GET, POST, OPTIONS
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+logging:
+  level:
+    root: debug
