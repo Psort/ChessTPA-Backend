@@ -49,7 +49,7 @@ public class UserAccessService {
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
 
-        webClientBuilder.build().post().uri("http://localhost:8081/api/user")
+        webClientBuilder.build().post().uri("http://user-service/api/user")
                 .bodyValue(request)
                 .retrieve()
                         .toBodilessEntity()
