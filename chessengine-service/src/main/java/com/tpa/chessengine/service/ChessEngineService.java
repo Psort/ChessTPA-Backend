@@ -1,6 +1,8 @@
 package com.tpa.chessengine.service;
 
-import com.chesstpa.Game;
+import com.chesstpa.communication.ChessEngine;
+import com.tpa.chessengine.dto.GameStatusRequest;
+import com.tpa.chessengine.dto.GameStatusResponse;
 import com.tpa.chessengine.dto.MoveRequest;
 import com.tpa.chessengine.dto.MoveResponse;
 import lombok.AllArgsConstructor;
@@ -9,18 +11,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class ChessEngineService {
-    private final Game game;
+    private final ChessEngine chessEngine;
     public ResponseEntity<Set<MoveResponse>> getPossiblesMoves(MoveRequest request) {
-        String[] moves = game.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition()).split("/");
+        String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), request.getWhiteCastle(), request.getBlackCastle()).split("/");
         return ResponseEntity.status(HttpStatus.OK).body(convertMoves(moves));
+    }
+    public ResponseEntity<GameStatusResponse> getGameStatus(GameStatusRequest request) {
+        String status = chessEngine.getGameStatus(request.getBoardState(), request.getWhiteCastle(), request.getBlackCastle(), request.getColor());
+        return ResponseEntity.status(HttpStatus.OK).body(convertStatus(status));
     }
     private Set<MoveResponse> convertMoves(String[] moves) {
         return Arrays.stream(moves)
@@ -30,5 +35,12 @@ public class ChessEngineService {
                     return new MoveResponse(x, y);
                 })
                 .collect(Collectors.toSet());
+    }
+    private GameStatusResponse convertStatus(String status){
+        if(Objects.equals(status, "Checkmate")){
+            return GameStatusResponse.CHECKMATE;
+        } else if (Objects.equals(status, "Pat")) {
+            return GameStatusResponse.PAT;
+        } else return GameStatusResponse.GAME;
     }
 }
