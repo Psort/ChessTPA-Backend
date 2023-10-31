@@ -23,20 +23,25 @@ spring:
           filters:
             - SetPath=/
         - id: user-service
-          uri: http://localhost:8081
+          uri: lb://user-service
           predicates:
             - Path=/api/user
         - id: accesscontrol-service
-          uri: http://localhost:8082
+          uri: lb://accesscontrol-service
           predicates:
             - Path=/api/auth/**
         - id: chessengine-service
-          uri: http://localhost:8084
+          uri: lb://chessengine-service
           predicates:
             - Path=/api/engine/**
             - Method=GET, POST, OPTIONS
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
 
 logging:
   level:
