@@ -16,7 +16,7 @@ import java.util.List;
 @Data
 public class Game {
     @Id
-    private String id;
-    private List<Move> moves;
+    private Long id;
+    private List<GameState> history;
     private Player[] players;
 }
