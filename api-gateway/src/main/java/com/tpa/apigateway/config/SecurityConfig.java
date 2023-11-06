@@ -11,11 +11,9 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
-
     @Bean
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
         http
