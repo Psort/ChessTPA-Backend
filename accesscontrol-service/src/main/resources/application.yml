@@ -1,3 +1,8 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: accesscontrol-service
 #keycloak
 keycloak:
   realm: ${KEYCLOAK_REALM}
@@ -8,11 +13,3 @@ keycloak:
     secret: ${KEYCLOAK_SECRET}
   use-resource-role-mappings: true
   bearer-only: true
-
-server:
-  port: 8082
-
-
-spring:
-  application:
-      name: accesscontrol-service
