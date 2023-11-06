@@ -1,6 +1,8 @@
 package com.tpa.chessengine.service;
 
 import com.chesstpa.communication.ChessEngine;
+import com.tpa.chessengine.dto.GameStatusRequest;
+import com.tpa.chessengine.dto.GameStatusResponse;
 import com.tpa.chessengine.dto.MoveRequest;
 import com.tpa.chessengine.dto.MoveResponse;
 import lombok.AllArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
