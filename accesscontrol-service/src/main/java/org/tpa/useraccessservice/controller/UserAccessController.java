@@ -3,6 +3,7 @@ package org.tpa.useraccessservice.controller;
 import lombok.RequiredArgsConstructor;
 
 import org.tpa.useraccessservice.dto.LoginRequest;
+import org.tpa.useraccessservice.dto.RefreshTokenRequest;
 import org.tpa.useraccessservice.dto.SignUpRequest;
 import org.tpa.useraccessservice.service.UserAccessService;
 import org.keycloak.representations.AccessTokenResponse;
@@ -25,6 +26,11 @@ public class UserAccessController {
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@RequestBody SignUpRequest signUpRequest){
         userAccessService.registerUser(signUpRequest);
+    }
+    @PostMapping("/refresh")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<AccessTokenResponse> refreshAccessToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
+        return userAccessService.refreshAccessToken(refreshTokenRequest);
     }
 
 }

@@ -1,9 +1,19 @@
 package org.tpa.useraccessservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.tpa.useraccessservice.config.KeycloakProvider;
+import org.tpa.useraccessservice.dto.KeycloakRefreshTokenRequest;
 import org.tpa.useraccessservice.dto.LoginRequest;
+import org.tpa.useraccessservice.dto.RefreshTokenRequest;
 import org.tpa.useraccessservice.dto.SignUpRequest;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
@@ -14,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.keycloak.admin.client.Keycloak;
+import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
@@ -24,6 +35,10 @@ public class UserAccessService {
     private final WebClient.Builder webClientBuilder;
     @Value("${keycloak.realm}")
     public String realm;
+    @Value("${keycloak.resource}")
+    public String clientID;
+    @Value("${keycloak.credentials.secret}")
+    public String clientSecret;
 
     /**
      * login user through keycloack
@@ -31,7 +46,7 @@ public class UserAccessService {
      * @return AccessTokenResponse
      */
     public ResponseEntity<AccessTokenResponse> login(LoginRequest loginRequest){
-        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword()).build();
+        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword());
         return  ResponseEntity.status(HttpStatus.OK).body(keycloak.tokenManager().getAccessToken());
     }
 
@@ -69,5 +84,31 @@ public class UserAccessService {
         passwordCredentials.setType(CredentialRepresentation.PASSWORD);
         passwordCredentials.setValue(password);
         return passwordCredentials;
+    }
+    /**
+     * get new access token from keycloak using refresh token
+     * @param refreshTokenRequest
+     * @return AccessTokenResponse
+     */
+
+    public ResponseEntity<AccessTokenResponse> refreshAccessToken(RefreshTokenRequest refreshTokenRequest) {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientID);
+        requestBody.add("grant_type", OAuth2Constants.REFRESH_TOKEN);
+        requestBody.add("refresh_token", refreshTokenRequest.getRefreshToken());
+        requestBody.add("client_secret", clientSecret);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        AccessTokenResponse accessTokenResponse = webClientBuilder.build()
+                .post()
+                .uri("http://localhost:8181/realms/Chess-TPA/protocol/openid-connect/token")
+                .headers(httpHeaders -> httpHeaders.addAll(headers))
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(AccessTokenResponse.class)
+                .block();
+        return ResponseEntity.status(HttpStatus.OK).body(accessTokenResponse);
     }
 }
