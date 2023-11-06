@@ -2,16 +2,12 @@ package org.tpa.useraccessservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.keycloak.OAuth2Constants;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.RealmResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.tpa.useraccessservice.config.KeycloakProvider;
-import org.tpa.useraccessservice.dto.KeycloakRefreshTokenRequest;
 import org.tpa.useraccessservice.dto.LoginRequest;
 import org.tpa.useraccessservice.dto.RefreshTokenRequest;
 import org.tpa.useraccessservice.dto.SignUpRequest;
@@ -24,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.keycloak.admin.client.Keycloak;
-import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
