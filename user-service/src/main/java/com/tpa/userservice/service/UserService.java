@@ -1,9 +1,9 @@
 package com.tpa.userservice.service;
 
 import com.tpa.userservice.dto.SignUpRequest;
+import com.tpa.userservice.dto.UserResponse;
 import com.tpa.userservice.model.User;
 import com.tpa.userservice.repostiory.UserRepository;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
@@ -29,13 +29,19 @@ public class UserService {
         log.info("User with email {} added", request.getEmail());
     }
 
-    public ResponseEntity<String> getUsernameByEmail(String email) {
+    public ResponseEntity<UserResponse> getUserByEmail(String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
+
             User user = userOptional.get();
-            String username = user.getUsername();
-            return ResponseEntity.ok(username);
+
+            UserResponse userResponse = UserResponse.builder()
+                    .username(user.getUsername())
+                    .build();
+
+            return ResponseEntity.ok(userResponse);
+
         } else {
             return ResponseEntity.notFound().build();
         }

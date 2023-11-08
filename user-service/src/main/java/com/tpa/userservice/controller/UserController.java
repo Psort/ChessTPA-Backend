@@ -2,6 +2,8 @@ package com.tpa.userservice.controller;
 
 import com.tpa.userservice.dto.SignUpRequest;
 
+import com.tpa.userservice.dto.UserResponse;
+import com.tpa.userservice.model.User;
 import com.tpa.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +23,7 @@ public class UserController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<String> getUsernameByEmail(@RequestParam String email){
-        return userService.getUsernameByEmail(email);
+    public ResponseEntity<UserResponse> getUsernameByEmail(@RequestParam String email){
+        return userService.getUserByEmail(email);
     }
 }
