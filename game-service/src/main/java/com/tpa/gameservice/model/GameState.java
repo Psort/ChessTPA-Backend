@@ -6,5 +6,5 @@ public class GameState {
     GameStatus status;
     Move move;
     String boardState;
-    List<castleType> castleType;
+    List<CastleType> castleType;
 }

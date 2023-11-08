@@ -12,5 +12,5 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @Data
 public class Player {
-    private String name;
+    private String username;
 }
