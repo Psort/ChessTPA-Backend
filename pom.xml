@@ -20,6 +20,7 @@
         <module>accesscontrol-service</module>
         <module>game-service</module>
         <module>chessengine-service</module>
+        <module>queue-service</module>
     </modules>
 
     <properties>
