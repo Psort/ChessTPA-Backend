@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ChessEngineService {
     private final ChessEngine chessEngine;
     public ResponseEntity<Set<MoveResponse>> getPossiblesMoves(MoveRequest request) {
-        String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), request.getWhiteCastle(), request.getBlackCastle()).split("/");
+        String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), "", "").split("/");
         return ResponseEntity.status(HttpStatus.OK).body(convertMoves(moves));
     }
     public ResponseEntity<GameStatusResponse> getGameStatus(GameStatusRequest request) {
@@ -29,10 +29,13 @@ public class ChessEngineService {
         return ResponseEntity.status(HttpStatus.OK).body(convertStatus(status));
     }
     private Set<MoveResponse> convertMoves(String[] moves) {
+        if(Arrays.toString(moves).equals("[]")){
+            return null;
+        }
         return Arrays.stream(moves)
                 .map(move -> {
-                    int x = move.toUpperCase().charAt(0) - 'A';
-                    int y = Integer.parseInt(move.substring(1).trim()) - 1;
+                    int x = Integer.parseInt(move.substring(1).trim());
+                    int y = move.toUpperCase().charAt(0) - 'A';
                     return new MoveResponse(x, y);
                 })
                 .collect(Collectors.toSet());
