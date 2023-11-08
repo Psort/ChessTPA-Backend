@@ -41,7 +41,7 @@ public class UserAccessService {
      * @return AccessTokenResponse
      */
     public ResponseEntity<AccessTokenResponse> login(LoginRequest loginRequest){
-        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword());
+        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword());
         return  ResponseEntity.ok(keycloak.tokenManager().getAccessToken());
     }
 
