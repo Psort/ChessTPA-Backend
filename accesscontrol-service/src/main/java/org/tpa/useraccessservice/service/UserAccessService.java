@@ -42,7 +42,7 @@ public class UserAccessService {
      */
     public ResponseEntity<AccessTokenResponse> login(LoginRequest loginRequest){
         Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword());
-        return  ResponseEntity.status(HttpStatus.OK).body(keycloak.tokenManager().getAccessToken());
+        return  ResponseEntity.ok(keycloak.tokenManager().getAccessToken());
     }
 
     /**
@@ -66,19 +66,6 @@ public class UserAccessService {
                                 .block();
 
         usersResource.create(kcUser);
-    }
-
-    /**
-     * creates password credentials for new keycloack user
-     * @param password
-     * @return CredentialRepresentation
-     */
-    private CredentialRepresentation createPasswordCredentials(String password) {
-        CredentialRepresentation passwordCredentials = new CredentialRepresentation();
-        passwordCredentials.setTemporary(false);
-        passwordCredentials.setType(CredentialRepresentation.PASSWORD);
-        passwordCredentials.setValue(password);
-        return passwordCredentials;
     }
     /**
      * get new access token from keycloak using refresh token
@@ -105,5 +92,17 @@ public class UserAccessService {
                 .bodyToMono(AccessTokenResponse.class)
                 .block();
         return ResponseEntity.status(HttpStatus.OK).body(accessTokenResponse);
+    }
+    /**
+     * creates password credentials for new keycloack user
+     * @param password
+     * @return CredentialRepresentation
+     */
+    private CredentialRepresentation createPasswordCredentials(String password) {
+        CredentialRepresentation passwordCredentials = new CredentialRepresentation();
+        passwordCredentials.setTemporary(false);
+        passwordCredentials.setType(CredentialRepresentation.PASSWORD);
+        passwordCredentials.setValue(password);
+        return passwordCredentials;
     }
 }

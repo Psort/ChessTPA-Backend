@@ -28,7 +28,7 @@ public class UserAccessController {
         userAccessService.registerUser(signUpRequest);
     }
     @PostMapping("/refresh")
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AccessTokenResponse> refreshAccessToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
         return userAccessService.refreshAccessToken(refreshTokenRequest);
     }
