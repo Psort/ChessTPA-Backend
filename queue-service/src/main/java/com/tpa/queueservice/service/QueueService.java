@@ -17,9 +17,9 @@ public class QueueService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public ResponseEntity<String> addToQueue(String playerId) {
+    public ResponseEntity<String> addToQueue(String username) {
         try {
-            kafkaTemplate.send(TOPIC, playerId);
+            kafkaTemplate.send(TOPIC, username);
             String result = gameStartFuture.get();
             gameStartFuture = new CompletableFuture<>();
             return ResponseEntity.ok(result);
