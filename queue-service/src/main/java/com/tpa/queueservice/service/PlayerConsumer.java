@@ -26,9 +26,8 @@ public class PlayerConsumer {
 
     private final QueueService queueService;
     @KafkaListener(topics = "players-queue", groupId = "group-id")
-    public void consume(String playerId) {
-        playerQueue.add(playerId);
-//        System.out.println(playerId );
+    public void consume(String username) {
+        playerQueue.add(username);
         if (playerQueue.size() >= PLAYERS_REQUIRED) {
             String firstPlayer = playerQueue.poll();
             String secondPlayer = playerQueue.poll();
@@ -37,8 +36,8 @@ public class PlayerConsumer {
                     .uri("http://game-service/api/game/create")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(NewGameRequest.builder()
-                            .firstPlayerId(firstPlayer)
-                            .secondPlayerId(secondPlayer)
+                            .firstPlayerUsername(firstPlayer)
+                            .secondPlayerUsername(secondPlayer)
                             .build())
                     .retrieve().bodyToMono(String.class).block();
             queueService.startGame(newGameId);
