@@ -1,6 +1,7 @@
 package com.tpa.gameservice.controller;
 
 
+import com.tpa.gameservice.dto.GameResponse;
 import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.service.GameService;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +19,10 @@ public class GameController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> createGame(@RequestBody NewGameRequest newGameRequest){
         return gameService.createGame(newGameRequest);
+    }
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<GameResponse> getGame(@RequestParam String gameId){
+        return gameService.getGame(gameId);
     }
 }
