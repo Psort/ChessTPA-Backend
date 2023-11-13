@@ -7,6 +7,6 @@ import lombok.Setter;
 @Builder
 @Getter
 public class NewGameRequest {
-    String firstPlayerId;
-    String secondPlayerId;
+    String firstPlayerUsername;
+    String secondPlayerUsername;
 }
