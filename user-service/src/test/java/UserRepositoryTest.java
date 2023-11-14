@@ -35,4 +35,24 @@ public class UserRepositoryTest {
             fail("This email doesn't exist");
         }
     }
+
+    @Test
+    void shouldFindUserByUsername() {
+        String email = "jk1@op.pl";
+        String username = "testUsername1";
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(username);
+
+        userRepository.save(user);
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+
+        if (userOptional.isPresent()) {
+            String expectedEmail = userOptional.get().getEmail();
+            assertEquals(email, expectedEmail);
+        } else {
+            fail("This email doesn't exist");
+        }
+    }
 }
