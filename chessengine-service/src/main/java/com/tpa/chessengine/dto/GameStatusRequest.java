@@ -5,7 +5,6 @@ import lombok.Getter;
 @Getter
 public class GameStatusRequest {
     private String boardState;
-    private String whiteCastle;
-    private String blackCastle;
+    private String[] castles;
     private String color;
 }

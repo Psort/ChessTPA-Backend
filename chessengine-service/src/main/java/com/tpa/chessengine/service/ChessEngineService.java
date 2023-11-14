@@ -21,11 +21,13 @@ import java.util.stream.Collectors;
 public class ChessEngineService {
     private final ChessEngine chessEngine;
     public ResponseEntity<Set<MoveResponse>> getPossiblesMoves(MoveRequest request) {
-        String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), "", "").split("/");
+        String castles = convertCastlesToString(request.getCastles());
+        String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), castles).split("/");
         return ResponseEntity.status(HttpStatus.OK).body(convertMoves(moves));
     }
     public ResponseEntity<GameStatusResponse> getGameStatus(GameStatusRequest request) {
-        String status = chessEngine.getGameStatus(request.getBoardState(), request.getWhiteCastle(), request.getBlackCastle(), request.getColor());
+        String castles = convertCastlesToString(request.getCastles());
+        String status = chessEngine.getGameStatus(request.getBoardState(), castles, request.getColor());
         return ResponseEntity.status(HttpStatus.OK).body(convertStatus(status));
     }
     private Set<MoveResponse> convertMoves(String[] moves) {
@@ -46,5 +48,8 @@ public class ChessEngineService {
         } else if (Objects.equals(status, "Pat")) {
             return GameStatusResponse.PAT;
         } else return GameStatusResponse.GAME;
+    }
+    private String convertCastlesToString(String[] castles){
+        return String.join("/", castles);
     }
 }
