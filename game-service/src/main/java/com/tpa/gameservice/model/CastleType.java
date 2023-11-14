@@ -7,7 +7,13 @@ public enum CastleType {
     LONGBLACK("q"),
     ;
 
-    CastleType(String value) {
+    private final String value;
 
+    CastleType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
     }
 }
