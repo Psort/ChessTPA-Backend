@@ -6,6 +6,5 @@ import lombok.Getter;
 public class MoveRequest {
     private String boardState;
     private String piecePosition;
-    private String whiteCastle;
-    private String blackCastle;
+    private String[] castles;
 }
