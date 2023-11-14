@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -22,5 +24,9 @@ public class User {
 
     @Column(unique = true)
     private String username;
-
+    @ElementCollection
+    private List<String> gameHistory;
+    public void addGame(String gameId){
+        this.gameHistory.add(gameId);
+    }
 }
