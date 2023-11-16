@@ -50,6 +50,6 @@ public class ChessEngineService {
         } else return GameStatusResponse.GAME;
     }
     private String convertCastlesToString(String[] castles){
-        return String.join("/", castles);
+        return String.join("", castles);
     }
 }
