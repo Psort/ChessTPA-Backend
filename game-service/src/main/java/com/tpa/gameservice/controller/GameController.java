@@ -3,6 +3,7 @@ package com.tpa.gameservice.controller;
 
 import com.tpa.gameservice.dto.GameResponse;
 import com.tpa.gameservice.dto.NewGameRequest;
+import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,5 +25,10 @@ public class GameController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameResponse> getGame(@RequestParam String gameId){
         return gameService.getGame(gameId);
+    }
+    @PatchMapping
+    @ResponseStatus(HttpStatus.OK)
+    public void safeGameStatus(@RequestBody SafeGameStateRequest safeGameStatusRequest){
+        gameService.safeGameState(safeGameStatusRequest);
     }
 }
