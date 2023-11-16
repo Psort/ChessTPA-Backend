@@ -4,6 +4,7 @@ package com.tpa.gameservice.service;
 import com.tpa.gameservice.dto.GameResponse;
 import com.tpa.gameservice.dto.GameToUserRequest;
 import com.tpa.gameservice.dto.NewGameRequest;
+import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,16 +35,17 @@ public class GameService {
 
         GameState defaultGameState = GameState.builder()
                 .boardState(defaultBoardState)
-                .status(GameStatus.PLAY)
+                .status(GameStatus.GAME)
                 .castleTypes(defaultCastleTypes)
                 .build();
 
-        Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).build();
-        Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).build();
+        Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
+        Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
 
         Game game = Game.builder()
                 .players(new Player[]{firstPlayer, secondPlayer})
                 .history(List.of(defaultGameState))
+                .actualColor(PlayerColor.WHITE)
                 .build();
 
         gameRepository.save(game);
@@ -60,12 +63,49 @@ public class GameService {
                     .id(optionalGame.get().getId())
                     .players(optionalGame.get().getPlayers())
                     .history(optionalGame.get().getHistory())
+                    .actualColor(optionalGame.get().getActualColor())
                     .build();
 
         return ResponseEntity.ok(game);
     }
         else return ResponseEntity.notFound().build();
     }
+
+    public void safeGameState(SafeGameStateRequest safeGameStateRequest) {
+        Optional<Game> optionalGame = gameRepository.findById(safeGameStateRequest.getGameId());
+
+        if (optionalGame.isPresent()) {
+            Game game = optionalGame.get();
+
+            GameState gameState = GameState.builder()
+                    .boardState(safeGameStateRequest.getBoardState())
+                    .status( GameStatus.getGameStatusByValue(safeGameStateRequest.getGameStatus()))
+                    .move(safeGameStateRequest.getMove())
+                    .castleTypes(
+                            calculateCastle(
+                                    game.getHistory().get(game.getHistory().size()-1).getCastleTypes()
+                                    ,safeGameStateRequest.getMove().getCoordinates()))
+                    .build();
+
+            PlayerColor actualColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
+            game.setActualColor(actualColor);
+            game.addGameStateToHistory(gameState);
+            gameRepository.save(game);
+        }
+    }
+
+    private List<String> calculateCastle(List<String> castleTypes, String[] coordinates) {
+        switch (coordinates[0]) {
+            case "a1" -> castleTypes.remove("q");
+            case "h1" -> castleTypes.remove("k");
+            case "a8" -> castleTypes.remove("K");
+            case "h8" -> castleTypes.remove("Q");
+            case "e1" -> castleTypes.removeAll(List.of("k", "q"));
+            case "e8" -> castleTypes.removeAll(List.of("K", "Q"));
+        }
+        return castleTypes;
+    }
+
     private void sendGameToUserService(String gameId, String firstPlayerUsername, String secondPlayerUsername) {
 
         GameToUserRequest request = GameToUserRequest.builder()
@@ -80,4 +120,5 @@ public class GameService {
                 .toBodilessEntity()
                 .block();
     }
+
 }
