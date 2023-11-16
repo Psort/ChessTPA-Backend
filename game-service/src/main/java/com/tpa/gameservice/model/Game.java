@@ -19,4 +19,9 @@ public class Game {
     private String id;
     private List<GameState> history;
     private Player[] players;
+    private PlayerColor actualColor;
+
+    public void addGameStateToHistory(GameState gameState) {
+        history.add(gameState);
+    }
 }
