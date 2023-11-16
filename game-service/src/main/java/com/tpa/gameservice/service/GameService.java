@@ -55,7 +55,7 @@ public class GameService {
         return new ResponseEntity<>(game.getId(), HttpStatus.CREATED);
     }
 
-    public ResponseEntity<GameResponse> getGame(String gameId) {
+    public GameResponse getGame(String gameId) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
         if (optionalGame.isPresent()) {
 
@@ -66,9 +66,9 @@ public class GameService {
                     .actualColor(optionalGame.get().getActualColor())
                     .build();
 
-        return ResponseEntity.ok(game);
+        return game;
     }
-        else return ResponseEntity.notFound().build();
+        else return null;
     }
 
     public void safeGameState(SafeGameStateRequest safeGameStateRequest) {
