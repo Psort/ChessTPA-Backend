@@ -24,7 +24,7 @@ public class GameController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameResponse> getGame(@RequestParam String gameId){
-        return gameService.getGame(gameId);
+        return ResponseEntity.ok(gameService.getGame(gameId));
     }
     @PatchMapping
     @ResponseStatus(HttpStatus.OK)
