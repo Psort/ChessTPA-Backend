@@ -13,5 +13,5 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 public class Move {
     private Player player;
-    private String coordinates;
+    private String[] coordinates;
 }
