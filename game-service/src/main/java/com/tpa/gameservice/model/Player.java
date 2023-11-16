@@ -13,4 +13,5 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 public class Player {
     private String username;
+    private PlayerColor color;
 }
