@@ -3,5 +3,14 @@ package com.tpa.gameservice.model;
 public enum GameStatus {
     PAT,
     CHECKMATE,
-    PLAY
+    GAME;
+
+    public static GameStatus getGameStatusByValue(String gameStatus) {
+        return switch (gameStatus) {
+            case "PAT" -> PAT;
+            case "CHECKMATE" -> CHECKMATE;
+            case "GAME" -> GAME;
+            default -> throw new IllegalArgumentException("Invalid game status: " + gameStatus);
+        };
+    }
 }
