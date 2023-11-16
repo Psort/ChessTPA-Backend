@@ -40,9 +40,9 @@ public class UserAccessService {
      * @param loginRequest
      * @return AccessTokenResponse
      */
-    public ResponseEntity<AccessTokenResponse> login(LoginRequest loginRequest){
+    public AccessTokenResponse login(LoginRequest loginRequest){
         Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword());
-        return  ResponseEntity.ok(keycloak.tokenManager().getAccessToken());
+        return  keycloak.tokenManager().getAccessToken();
     }
 
     /**
@@ -73,7 +73,7 @@ public class UserAccessService {
      * @return AccessTokenResponse
      */
 
-    public ResponseEntity<AccessTokenResponse> refreshAccessToken(RefreshTokenRequest refreshTokenRequest) {
+    public AccessTokenResponse refreshAccessToken(RefreshTokenRequest refreshTokenRequest) {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("client_id", clientID);
         requestBody.add("grant_type", OAuth2Constants.REFRESH_TOKEN);
@@ -91,7 +91,7 @@ public class UserAccessService {
                 .retrieve()
                 .bodyToMono(AccessTokenResponse.class)
                 .block();
-        return ResponseEntity.status(HttpStatus.OK).body(accessTokenResponse);
+        return accessTokenResponse;
     }
     /**
      * creates password credentials for new keycloack user

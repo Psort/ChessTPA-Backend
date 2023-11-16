@@ -20,7 +20,8 @@ public class UserAccessController {
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AccessTokenResponse> login(@RequestBody LoginRequest loginRequest){
-        return userAccessService.login(loginRequest);
+        AccessTokenResponse accessTokenResponse = userAccessService.login(loginRequest);
+        return ResponseEntity.ok(accessTokenResponse);
     }
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -30,7 +31,8 @@ public class UserAccessController {
     @PostMapping("/refresh")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<AccessTokenResponse> refreshAccessToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
-        return userAccessService.refreshAccessToken(refreshTokenRequest);
+        AccessTokenResponse accessTokenResponse = userAccessService.refreshAccessToken(refreshTokenRequest);
+        return ResponseEntity.ok(accessTokenResponse);
     }
 
 }
