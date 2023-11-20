@@ -21,7 +21,7 @@ public class ChessEngineController {
     @PostMapping("/move")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Set<MoveResponse>> getPossibleMoves(@RequestBody MoveRequest request ){
-        Set<MoveResponse> moveResponses = chessEngineService.getPossiblesMoves(request)
+        Set<MoveResponse> moveResponses = chessEngineService.getPossiblesMoves(request);
         return ResponseEntity.ok(moveResponses);
     }
     @PostMapping("/status")
