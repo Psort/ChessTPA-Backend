@@ -31,4 +31,10 @@ public class GameController {
     public void safeGameStatus(@RequestBody SafeGameStateRequest safeGameStatusRequest){
         gameService.safeGameState(safeGameStatusRequest);
     }
+    @GetMapping("/json")
+    @ResponseStatus(HttpStatus.OK)
+    public String getGameAsJson(@RequestParam String gameId){
+        System.out.println(gameService.getGameResponseAsJson(gameId));
+        return gameService.getGameResponseAsJson(gameId);
+    }
 }

@@ -1,6 +1,8 @@
 package com.tpa.gameservice.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpa.gameservice.dto.GameResponse;
 import com.tpa.gameservice.dto.GameToUserRequest;
 import com.tpa.gameservice.dto.NewGameRequest;
@@ -71,6 +73,22 @@ public class GameService {
         else return null;
     }
 
+    public String getGameResponseAsJson(String gameId) {
+        return convertToGameResponseAsJson(gameId);
+    }
+
+    private String convertToGameResponseAsJson(String gameId) {
+        GameResponse gameResponse = getGame(gameId);
+        System.out.println("GAME ID" + gameId);
+        System.out.println("GAME RESPONSE" + gameResponse);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(gameResponse);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public void safeGameState(SafeGameStateRequest safeGameStateRequest) {
         Optional<Game> optionalGame = gameRepository.findById(safeGameStateRequest.getGameId());
 
