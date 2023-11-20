@@ -39,6 +39,10 @@ spring:
           uri: lb://game-service
           predicates:
             - Path=/api/game/**
+        - id: websocket-service
+          uri: lb://websocket-service
+          predicates:
+            - Path=/stomp/**
         - id: chessengine-service
           uri: lb://chessengine-service
           predicates:
