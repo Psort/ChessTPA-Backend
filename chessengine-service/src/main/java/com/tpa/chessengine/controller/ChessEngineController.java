@@ -6,6 +6,7 @@ import com.tpa.chessengine.dto.MoveRequest;
 import com.tpa.chessengine.dto.MoveResponse;
 import com.tpa.chessengine.service.ChessEngineService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +19,15 @@ public class ChessEngineController {
 
     private final ChessEngineService chessEngineService;
     @PostMapping("/move")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Set<MoveResponse>> getPossibleMoves(@RequestBody MoveRequest request ){
-        return chessEngineService.getPossiblesMoves(request);
+        Set<MoveResponse> moveResponses = chessEngineService.getPossiblesMoves(request);
+        return ResponseEntity.ok(moveResponses);
     }
     @PostMapping("/status")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameStatusResponse> getGameStatus(@RequestBody GameStatusRequest request ){
-        return chessEngineService.getGameStatus(request);
+        GameStatusResponse gameStatusResponse = chessEngineService.getGameStatus(request);
+        return ResponseEntity.ok(gameStatusResponse);
     }
 }

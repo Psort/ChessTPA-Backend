@@ -19,12 +19,14 @@ public class GameController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> createGame(@RequestBody NewGameRequest newGameRequest){
-        return gameService.createGame(newGameRequest);
+        String gameId = gameService.createGame(newGameRequest);
+        return ResponseEntity.ok(gameId);
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameResponse> getGame(@RequestParam String gameId){
-        return ResponseEntity.ok(gameService.getGame(gameId));
+        GameResponse gameResponse = gameService.getGame(gameId);
+        return ResponseEntity.ok(gameResponse);
     }
     @PatchMapping
     @ResponseStatus(HttpStatus.OK)

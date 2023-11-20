@@ -20,15 +20,15 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ChessEngineService {
     private final ChessEngine chessEngine;
-    public ResponseEntity<Set<MoveResponse>> getPossiblesMoves(MoveRequest request) {
+    public Set<MoveResponse> getPossiblesMoves(MoveRequest request) {
         String castles = convertCastlesToString(request.getCastles());
         String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), castles).split("/");
-        return ResponseEntity.status(HttpStatus.OK).body(convertMoves(moves));
+        return convertMoves(moves);
     }
-    public ResponseEntity<GameStatusResponse> getGameStatus(GameStatusRequest request) {
+    public GameStatusResponse getGameStatus(GameStatusRequest request) {
         String castles = convertCastlesToString(request.getCastles());
         String status = chessEngine.getGameStatus(request.getBoardState(), castles, request.getColor());
-        return ResponseEntity.status(HttpStatus.OK).body(convertStatus(status));
+        return convertStatus(status);
     }
     private Set<MoveResponse> convertMoves(String[] moves) {
         if(Arrays.toString(moves).equals("[]")){

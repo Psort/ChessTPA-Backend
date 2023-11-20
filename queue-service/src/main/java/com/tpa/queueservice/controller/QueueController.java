@@ -16,6 +16,7 @@ public class QueueController {
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> joinGame(@RequestParam String username) {
-        return queueService.addToQueue(username);
+        String gameId = queueService.addToQueue(username);
+        return ResponseEntity.ok(gameId);
     }
 }

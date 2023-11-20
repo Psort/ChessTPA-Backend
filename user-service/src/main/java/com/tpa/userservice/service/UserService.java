@@ -31,7 +31,7 @@ public class UserService {
         log.info("User with email {} added", request.getEmail());
     }
 
-    public ResponseEntity<UserResponse> getUserByEmail(String email) {
+    public UserResponse getUserByEmail(String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isPresent()) {
@@ -42,10 +42,10 @@ public class UserService {
                     .username(user.getUsername())
                     .build();
 
-            return ResponseEntity.ok(userResponse);
+            return userResponse;
 
         } else {
-            return ResponseEntity.notFound().build();
+            return null;
         }
     }
 

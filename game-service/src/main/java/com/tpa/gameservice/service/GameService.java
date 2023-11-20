@@ -27,7 +27,7 @@ public class GameService {
     private final WebClient.Builder webClientBuilder;
 
     @Transactional
-    public ResponseEntity<String> createGame(NewGameRequest newGameRequest) {
+    public String createGame(NewGameRequest newGameRequest) {
         List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
                 CastleType.SHORTWHITE.getValue(),
                 CastleType.LONGBLACK.getValue(),
@@ -54,7 +54,7 @@ public class GameService {
 
         sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
 
-        return new ResponseEntity<>(game.getId(), HttpStatus.CREATED);
+        return game.getId();
     }
 
     public GameResponse getGame(String gameId) {

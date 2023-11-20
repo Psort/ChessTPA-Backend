@@ -25,7 +25,8 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<UserResponse> getUsernameByEmail(@RequestParam String email){
-        return userService.getUserByEmail(email);
+        UserResponse userResponse = userService.getUserByEmail(email);
+        return ResponseEntity.ok(userResponse);
     }
 
     @PostMapping("/game")
