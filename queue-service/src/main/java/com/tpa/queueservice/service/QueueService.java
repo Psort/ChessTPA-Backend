@@ -17,16 +17,16 @@ public class QueueService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public ResponseEntity<String> addToQueue(String username) {
+    public String addToQueue(String username) {
         try {
             kafkaTemplate.send(TOPIC, username);
             String result = gameStartFuture.get();
             gameStartFuture = new CompletableFuture<>();
-            return ResponseEntity.ok(result);
+            return result;
         } catch (InterruptedException | ExecutionException e) {
             // toDo
         }
-        return (ResponseEntity<String>) ResponseEntity.internalServerError();
+        return username;
     }
     public void startGame(String gameId) {
         gameStartFuture.complete(gameId);
