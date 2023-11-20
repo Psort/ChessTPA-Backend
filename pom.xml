@@ -21,6 +21,7 @@
         <module>game-service</module>
         <module>chessengine-service</module>
         <module>queue-service</module>
+        <module>websocket-service</module>
     </modules>
 
     <properties>
