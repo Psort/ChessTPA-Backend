@@ -16,8 +16,6 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.keycloak.admin.client.Keycloak;
 
@@ -27,6 +25,7 @@ import java.util.Collections;
 @Service
 public class UserAccessService {
     private final KeycloakProvider keycloakProvider;
+    private final WebClient.Builder webClientBuilderWithLB;
     private final WebClient.Builder webClientBuilder;
     @Value("${keycloak.realm}")
     public String realm;
@@ -59,7 +58,7 @@ public class UserAccessService {
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
 
-        webClientBuilder.build().post().uri("http://user-service/api/user")
+        webClientBuilderWithLB.build().post().uri("http://user-service/api/user")
                 .bodyValue(request)
                 .retrieve()
                         .toBodilessEntity()
