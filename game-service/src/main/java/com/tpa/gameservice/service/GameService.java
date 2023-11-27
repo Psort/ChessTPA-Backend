@@ -10,13 +10,10 @@ import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,8 +76,7 @@ public class GameService {
 
     private String convertToGameResponseAsJson(String gameId) {
         GameResponse gameResponse = getGame(gameId);
-        System.out.println("GAME ID" + gameId);
-        System.out.println("GAME RESPONSE" + gameResponse);
+
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.writeValueAsString(gameResponse);
@@ -102,7 +98,7 @@ public class GameService {
                     .castleTypes(
                             calculateCastle(
                                     game.getHistory().get(game.getHistory().size()-1).getCastleTypes()
-                                    ,safeGameStateRequest.getMove().getCoordinates()))
+                                    ,safeGameStateRequest.getMove().getStartingCoordinates()))
                     .build();
 
             PlayerColor actualColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
@@ -112,8 +108,8 @@ public class GameService {
         }
     }
 
-    private List<String> calculateCastle(List<String> castleTypes, String[] coordinates) {
-        switch (coordinates[0]) {
+    private List<String> calculateCastle(List<String> castleTypes, String coordinates) {
+        switch (coordinates) {
             case "a1" -> castleTypes.remove("q");
             case "h1" -> castleTypes.remove("k");
             case "a8" -> castleTypes.remove("K");
