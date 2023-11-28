@@ -3,11 +3,11 @@ package com.tpa.userservice.service;
 import com.tpa.userservice.dto.NewGameRequest;
 import com.tpa.userservice.dto.SignUpRequest;
 import com.tpa.userservice.dto.UserResponse;
+import com.tpa.userservice.exception.UserRequestException;
 import com.tpa.userservice.model.User;
 import com.tpa.userservice.repostiory.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,21 +32,11 @@ public class UserService {
     }
 
     public UserResponse getUserByEmail(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-
-        if (userOptional.isPresent()) {
-
-            User user = userOptional.get();
-
-            UserResponse userResponse = UserResponse.builder()
-                    .username(user.getUsername())
-                    .build();
-
-            return userResponse;
-
-        } else {
-            return null;
-        }
+        return userRepository.findByEmail(email)
+                .map(user -> UserResponse.builder()
+                        .username(user.getUsername())
+                        .build())
+                .orElseThrow(() -> new UserRequestException("User does not exist"));
     }
 
     public void addGame(NewGameRequest request) {
@@ -71,8 +61,7 @@ public class UserService {
             userRepository.saveAll(List.of(firstPlayer, secondPlayer));
 
         } else {
-           //todo
-            log.info("User does not exist");
+           throw new UserRequestException("User does not exist");
         }
     }
 }
