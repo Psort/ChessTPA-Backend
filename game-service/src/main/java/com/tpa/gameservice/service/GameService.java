@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -52,6 +51,19 @@ public class GameService {
         sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
 
         return game.getId();
+    }
+
+    public List<GameResponse> getAllGamesForUser(String username) {
+        List<Game> optionalGames = gameRepository.findByPlayersUsernameAndHistoryStatusIsNotIn(username,List.of("CHECKMATE","PAT"));
+        List<GameResponse> games = new ArrayList<>();
+        for (Game game:optionalGames) {
+            games.add(GameResponse.builder()
+                    .id(game.getId()).actualColor(game.getActualColor())
+                    .players(game.getPlayers())
+                    .history(game.getHistory())
+                    .build());
+        }
+        return games;
     }
 
     public GameResponse getGame(String gameId) {
@@ -134,5 +146,4 @@ public class GameService {
                 .toBodilessEntity()
                 .block();
     }
-
 }

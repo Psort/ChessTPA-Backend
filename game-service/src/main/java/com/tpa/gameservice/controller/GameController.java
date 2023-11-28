@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/game")
 @RequiredArgsConstructor
@@ -26,6 +28,12 @@ public class GameController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameResponse> getGame(@RequestParam String gameId){
         GameResponse gameResponse = gameService.getGame(gameId);
+        return ResponseEntity.ok(gameResponse);
+    }
+    @GetMapping("/user")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<GameResponse>> getAllGamesForUser(@RequestParam String username){
+        List<GameResponse> gameResponse = gameService.getAllGamesForUser(username);
         return ResponseEntity.ok(gameResponse);
     }
     @PatchMapping
