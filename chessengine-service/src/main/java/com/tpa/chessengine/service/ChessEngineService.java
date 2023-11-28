@@ -43,11 +43,10 @@ public class ChessEngineService {
                 .collect(Collectors.toSet());
     }
     private GameStatusResponse convertStatus(String status){
-        if(Objects.equals(status, "Checkmate")){
-            return GameStatusResponse.CHECKMATE;
-        } else if (Objects.equals(status, "Pat")) {
-            return GameStatusResponse.PAT;
-        } else return GameStatusResponse.GAME;
+        return Objects.equals(status, "Checkmate") ? GameStatusResponse.CHECKMATE :
+                Objects.equals(status, "Pat") ? GameStatusResponse.PAT :
+                        GameStatusResponse.GAME;
+
     }
     private String convertCastlesToString(String[] castles){
         return String.join("", castles);
