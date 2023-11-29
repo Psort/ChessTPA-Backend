@@ -7,10 +7,13 @@ import com.tpa.userservice.exception.UserRequestException;
 import com.tpa.userservice.model.User;
 import com.tpa.userservice.repostiory.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,15 +23,24 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     @Transactional
-    public void createUser(SignUpRequest request){
-        User user = User.builder()
-                .email(request.getEmail())
-                .username(request.getUsername())
-                .build();
+    public void createUser(SignUpRequest request) {
+        try {
+            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                throw new UserRequestException("User already exist");
+            }
+            User user = User.builder()
+                    .email(request.getEmail())
+                    .username(request.getUsername())
+                    .build();
 
-        userRepository.save(user);
+            userRepository.save(user);
 
-        log.info("User with email {} added", request.getEmail());
+            log.info("User with email {} added", request.getEmail());
+
+        } catch (Exception e) {
+            log.warn("Failed to save user to database, {}", e.getMessage());
+            throw new UserRequestException("Failed during database operation");
+        }
     }
 
     public UserResponse getUserByEmail(String email) {
