@@ -9,12 +9,16 @@ import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @AllArgsConstructor
@@ -23,6 +27,7 @@ public class GameService {
     private final WebClient.Builder webClientBuilder;
 
     @Transactional
+    @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
     public String createGame(NewGameRequest newGameRequest) {
         List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
                 CastleType.SHORTWHITE.getValue(),
@@ -120,8 +125,8 @@ public class GameService {
         }
     }
 
-    private List<String> calculateCastle(List<String> castleTypes, String coordinates) {
-        switch (coordinates) {
+    private List<String> calculateCastle(List<String> castleTypes, String startingCoordinates) {
+        switch (startingCoordinates) {
             case "a1" -> castleTypes.remove("q");
             case "h1" -> castleTypes.remove("k");
             case "a8" -> castleTypes.remove("K");
@@ -145,5 +150,9 @@ public class GameService {
                 .retrieve()
                 .toBodilessEntity()
                 .block();
+    }
+
+    private String fallback(NewGameRequest request, RuntimeException e) {
+        return "Can not create game right now, please try again later";
     }
 }
