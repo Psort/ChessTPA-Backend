@@ -50,7 +50,8 @@ spring:
             - Method=GET, POST, OPTIONS
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-
+#  zipkin:
+#    base-url: http://localhost:9411
 eureka:
   client:
     service-url:
@@ -59,3 +60,7 @@ eureka:
 #logging:
 #  level:
 #    root: debug
+management:
+  tracing:
+    sampling:
+      probability: 1.0

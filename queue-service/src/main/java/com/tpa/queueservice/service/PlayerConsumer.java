@@ -25,7 +25,7 @@ public class PlayerConsumer {
     private Queue<String> playerQueue = new LinkedList<>();
 
     private final QueueService queueService;
-    @KafkaListener(topics = "players-queue", groupId = "group-id")
+    @KafkaListener(topics = "players-queue", groupId = "queue-id")
     public void consume(String username) {
         playerQueue.add(username);
         if (playerQueue.size() >= PLAYERS_REQUIRED) {

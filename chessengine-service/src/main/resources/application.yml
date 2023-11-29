@@ -1,11 +1,13 @@
 spring:
   application:
     name: chessengine-service
-
 server:
   port: 8084
 
-
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
 
 

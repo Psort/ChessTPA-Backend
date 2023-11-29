@@ -14,10 +14,16 @@ keycloak:
   use-resource-role-mappings: true
   bearer-only: true
 
+management:
+  tracing:
+    sampling:
+      probability: 1.0
 
 management.health.circuitbreakers.enabled: true
 management.endpoints.web.exposure.include: '*'
 management.endpoint.health.show-details: always
+
+
 
 resilience4j.circuitbreaker:
   configs:
