@@ -1,5 +1,8 @@
 package org.tpa.useraccessservice.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.OAuth2Constants;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.keycloak.admin.client.Keycloak;
 
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
@@ -48,7 +53,10 @@ public class UserAccessService {
      * creates new user in keycloack
      * @param request
      */
-    public void registerUser(SignUpRequest request){
+    @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
+    @TimeLimiter(name = "user-service")
+    @Retry(name = "user-service")
+    public CompletableFuture<String> registerUser(SignUpRequest request){
         UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
         CredentialRepresentation credentialRepresentation = createPasswordCredentials(request.getPassword());
         UserRepresentation kcUser = new UserRepresentation();
@@ -65,6 +73,8 @@ public class UserAccessService {
                                 .block();
 
         usersResource.create(kcUser);
+
+        return CompletableFuture.completedFuture("User registered successfully");
     }
     /**
      * get new access token from keycloak using refresh token
@@ -103,5 +113,12 @@ public class UserAccessService {
         passwordCredentials.setType(CredentialRepresentation.PASSWORD);
         passwordCredentials.setValue(password);
         return passwordCredentials;
+    }
+
+    private CompletableFuture<String> fallback(SignUpRequest signUpRequest, RuntimeException e) {
+        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
+    }
+    private CompletableFuture<String> fallback(SignUpRequest signUpRequest, TimeoutException e) {
+        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 }
