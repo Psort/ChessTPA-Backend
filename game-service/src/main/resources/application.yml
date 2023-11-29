@@ -15,4 +15,37 @@ management:
       probability: 1.0
 
 
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      registerHealthIndicator: true
+      slidingWindowSize: 5
+      slidingWindowType: COUNT_BASED
+      permittedNumberOfCallsInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 5s
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+      recordExceptions:
+        - java.io.IOException
 
+  instances:
+    user-service:
+      baseConfig: default
+
+#resilience4j.timelimiter:
+#  configs:
+#    default:
+#      timeoutDuration: 3s
+#  instances:
+#    user-service:
+#      baseConfig: default
+#
+#resilience4j.retry:
+#  configs:
+#    default:
+#      max-attempts: 3
+#      wait-duration: 5s
+#  instances:
+#    user-service:
+#      baseConfig: default
