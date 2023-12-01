@@ -1,0 +1,41 @@
+global:
+  scrape_interval:     10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'accesscontrol_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['accesscontrol-service:8080']
+        labels:
+          application: 'AccessControl Service Application'
+  - job_name: 'chessengine_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['chessengine-service:8080']
+        labels:
+          application: 'ChessEngine Service Application'
+  - job_name: 'game_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['game-service:8080']
+        labels:
+          application: 'Game Service Application'
+  - job_name: 'queue_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['queue-service:8080']
+        labels:
+          application: 'Queue Service Application'
+  - job_name: 'user_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'user-service:8080' ]
+        labels:
+          application: 'User Service Application'
+  - job_name: 'websocket_service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'websocket-service:8080' ]
+        labels:
+          application: 'Websocket Service Application'
