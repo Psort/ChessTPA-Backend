@@ -30,8 +30,6 @@ management:
       show-details: always
 
 
-
-
 resilience4j.circuitbreaker:
   configs:
     default:
