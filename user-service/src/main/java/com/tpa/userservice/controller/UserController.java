@@ -1,5 +1,6 @@
 package com.tpa.userservice.controller;
 
+import com.tpa.userservice.dto.EloTradeRequest;
 import com.tpa.userservice.dto.NewGameRequest;
 import com.tpa.userservice.dto.SignUpRequest;
 
@@ -33,5 +34,10 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public void addGame(@RequestBody NewGameRequest request){
         userService.addGame(request);
+    }
+
+    @PatchMapping
+    public void calculateElo(@RequestBody EloTradeRequest request){
+        userService.tradeEloPoints(request.getWinningUsername(), request.getLosingUsername());
     }
 }
