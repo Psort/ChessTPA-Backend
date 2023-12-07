@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -152,6 +153,21 @@ public class GameService {
                 .block();
     }
 
+    public List<String> getMovesHistory(String gameId){
+        Optional<Game> optionalGame = gameRepository.findById(gameId);
+
+        if(optionalGame.isPresent()) {
+            Game game = optionalGame.get();
+
+            return game.getHistory().stream()
+                    .skip(1)
+                    .map(gameState -> gameState.getMove().getEndingCoordinates())
+                    .toList();
+        }
+
+        //todo
+        return null;
+    }
     private String fallback(NewGameRequest request, RuntimeException e) {
         return "Can not create game right now, please try again later";
     }
