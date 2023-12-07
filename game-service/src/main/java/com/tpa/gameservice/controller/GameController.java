@@ -44,7 +44,11 @@ public class GameController {
     @GetMapping("/json")
     @ResponseStatus(HttpStatus.OK)
     public String getGameAsJson(@RequestParam String gameId){
-        System.out.println(gameService.getGameResponseAsJson(gameId));
         return gameService.getGameResponseAsJson(gameId);
+    }
+    @GetMapping("/moves")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<List<String>> getMovesHistory(@RequestParam String gameId){
+        return ResponseEntity.ok(gameService.getMovesHistory(gameId));
     }
 }
