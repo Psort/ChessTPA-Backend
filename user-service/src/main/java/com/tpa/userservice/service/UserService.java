@@ -17,6 +17,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.Math.pow;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,9 +30,13 @@ public class UserService {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
                 throw new UserRequestException("User already exist");
             }
+
+            double defaultEloRating = 800;
+
             User user = User.builder()
                     .email(request.getEmail())
                     .username(request.getUsername())
+                    .eloRating(defaultEloRating)
                     .build();
 
             userRepository.save(user);
@@ -75,5 +81,48 @@ public class UserService {
         } else {
            throw new UserRequestException("User does not exist");
         }
+    }
+
+    public void tradeEloPoints(String winningUsername, String losingUsername){
+        Optional<User> optionalWinningPlayer = userRepository.findByUsername(winningUsername);
+        Optional<User> optionalLosingPlayer = userRepository.findByUsername(losingUsername);
+
+        if (optionalWinningPlayer.isPresent() && optionalLosingPlayer.isPresent()) {
+
+            User winningPlayer = optionalWinningPlayer.get();
+            User losingPlayer = optionalLosingPlayer.get();
+
+            double winningPlayerEloRating = winningPlayer.getEloRating();
+            double losingPlayerEloRating = losingPlayer.getEloRating();
+
+            double winningPlayerProb = playerWinningProbability(losingPlayerEloRating, winningPlayerEloRating);
+            double losingPlayerProb = playerWinningProbability(winningPlayerEloRating, losingPlayerEloRating);
+
+            // constant value to calculate elo rating
+            //todo change value of k based on elo rating
+            int k = 30;
+
+            winningPlayerEloRating = winningPlayerEloRating + k * (1 - winningPlayerProb);
+            losingPlayerEloRating = losingPlayerEloRating + k * (0 - losingPlayerProb);
+
+            winningPlayer.setEloRating(winningPlayerEloRating);
+            losingPlayer.setEloRating(losingPlayerEloRating);
+
+            userRepository.saveAll(List.of(winningPlayer, losingPlayer));
+        }
+    }
+
+    /**
+     * Calculates probability of winning based on players elo rating
+     * @param firstPlayerEloRating
+     * @param secondPlayerEloRating
+     * @return winning probability as double
+     */
+    private double playerWinningProbability(double firstPlayerEloRating, double secondPlayerEloRating){
+        return 1.0f
+                / (1
+                + (float) (Math.pow(
+                10, 1.0f * (firstPlayerEloRating - secondPlayerEloRating)
+                        / 400)));
     }
 }
