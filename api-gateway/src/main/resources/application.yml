@@ -43,6 +43,10 @@ spring:
           uri: lb://websocket-service
           predicates:
             - Path=/stomp/**
+        - id: stockfish-service
+          uri: http://localhost:8060
+          predicates:
+            - Path=/stockfish/**
         - id: chessengine-service
           uri: lb://chessengine-service
           predicates:
