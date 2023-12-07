@@ -20,7 +20,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeExchange((authorize) -> authorize
-                        .pathMatchers("/eureka/**","/api/auth/**", "/stomp/**")
+                        .pathMatchers("/eureka/**","/api/auth/**", "/stomp/**", "/stockfish/**")
                         .permitAll()
                         .anyExchange().authenticated()
                 )
