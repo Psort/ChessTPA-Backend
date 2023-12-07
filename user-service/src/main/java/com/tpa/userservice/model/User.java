@@ -26,6 +26,8 @@ public class User {
     private String username;
     @ElementCollection
     private List<String> gameHistory;
+    @Column
+    private Double eloRating;
     public void addGame(String gameId){
         this.gameHistory.add(gameId);
     }
