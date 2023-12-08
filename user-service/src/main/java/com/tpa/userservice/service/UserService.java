@@ -83,7 +83,8 @@ public class UserService {
         }
     }
 
-    public void tradeEloPoints(String winningUsername, String losingUsername){
+    @Transactional
+    public void tradeEloPoints(String winningUsername, String losingUsername, boolean isWin){
         Optional<User> optionalWinningPlayer = userRepository.findByUsername(winningUsername);
         Optional<User> optionalLosingPlayer = userRepository.findByUsername(losingUsername);
 
@@ -102,13 +103,19 @@ public class UserService {
             //todo change value of k based on elo rating
             int k = 30;
 
-            winningPlayerEloRating = winningPlayerEloRating + k * (1 - winningPlayerProb);
-            losingPlayerEloRating = losingPlayerEloRating + k * (0 - losingPlayerProb);
+            if(isWin) {
+                winningPlayerEloRating = winningPlayerEloRating + k * (1 - winningPlayerProb);
+                winningPlayer.setEloRating(winningPlayerEloRating);
+                userRepository.save(winningPlayer);
+            }
+            else {
+                losingPlayerEloRating = losingPlayerEloRating + k * (0 - losingPlayerProb);
+                losingPlayer.setEloRating(losingPlayerEloRating);
+                userRepository.save(losingPlayer);
+            }
 
-            winningPlayer.setEloRating(winningPlayerEloRating);
-            losingPlayer.setEloRating(losingPlayerEloRating);
+            log.info("ELO FOR WINNING PLAYER {}, ELO FOR LOSING PLAYER {}", winningPlayerEloRating, losingPlayerEloRating);
 
-            userRepository.saveAll(List.of(winningPlayer, losingPlayer));
         }
     }
 

@@ -38,6 +38,6 @@ public class UserController {
 
     @PatchMapping
     public void calculateElo(@RequestBody EloTradeRequest request){
-        userService.tradeEloPoints(request.getWinningUsername(), request.getLosingUsername());
+        userService.tradeEloPoints(request.getWinningUsername(), request.getLosingUsername(), request.isWin());
     }
 }
