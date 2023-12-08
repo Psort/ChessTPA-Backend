@@ -52,6 +52,11 @@ spring:
           predicates:
             - Path=/api/engine/**
             - Method=GET, POST, OPTIONS
+        - id: analysis-service
+          uri: http://localhost:5000
+          predicates:
+            - Path=/api/analysis/**
+            - Method=GET, POST, OPTIONS
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
 #  zipkin:
