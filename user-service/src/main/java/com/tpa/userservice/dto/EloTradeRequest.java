@@ -6,4 +6,5 @@ import lombok.Getter;
 public class EloTradeRequest {
     private String winningUsername;
     private String losingUsername;
+    private boolean win;
 }
