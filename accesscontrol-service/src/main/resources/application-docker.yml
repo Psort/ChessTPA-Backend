@@ -1,18 +1,20 @@
 server:
   port: 8082
-spring:
-  application:
-    name: accesscontrol-service
-#keycloak
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@host.docker.internal:8761/eureka
+
 keycloak:
-  realm: ${KEYCLOAK_REALM}
+  realm: Chess-TPA
   auth-server-url: http://localhost:8181
   ssl-required: external
-  resource: ${KEYCLOAK_RESOURCE}
+  resource: chess-tpa
   credentials:
-    secret: ${KEYCLOAK_SECRET}
+    secret: OCBVjq63DZ5HInaJ1bRKSM9X09mNWm4I
   use-resource-role-mappings: true
   bearer-only: true
+
 
 management:
   tracing:
