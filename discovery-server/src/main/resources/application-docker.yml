@@ -1,0 +1,13 @@
+server:
+  port: 8761
+eureka:
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://host.docker.internal:8761/eureka/
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411
