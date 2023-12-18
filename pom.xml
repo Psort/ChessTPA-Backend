@@ -52,7 +52,6 @@
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -69,7 +68,20 @@
                     <from>
                         <image>eclipse-temurin:19-jre</image>
                     </from>
-                    <to><image>registry.hub.docker.com/psort/${artifactId}</image></to>
+                    <to>
+                        <image>registry.hub.docker.com/tymsztrumpf/${project.artifactId}:latest</image>
+                    </to>
+                    <!-- Dodaj sekcję extraDirectories -->
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>${project.build.directory}/classes</from>
+                                <into>/path/in/container</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
+                    <!-- Ustaw tryb containerizing na exploded, aby śledzić zmiany w czasie rzeczywistym -->
+                    <containerizingMode>exploded</containerizingMode>
                 </configuration>
                 <executions>
                     <execution>
