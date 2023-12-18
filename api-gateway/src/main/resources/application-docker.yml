@@ -1,14 +1,8 @@
-server:
-  port: 8080
 eureka:
   client:
     service-url:
-      defaultZone: http://hwdp
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri=: http://host.docker.internal:8181/realms/Chess-TPA
+      defaultZone: http://eureka:password@host.docker.internal:8761/eureka
+
 spring:
   cloud:
     gateway:
@@ -22,7 +16,7 @@ spring:
             allowCredentials: true
       routes:
         - id: discovery-server
-          uri: http://hwdp
+          uri: http://host.docker.internal:8761
           predicates:
             - Path=/eureka/web
             - Method=GET, POST, OPTIONS
@@ -37,7 +31,7 @@ spring:
           predicates:
             - Path=/api/queue/**
         - id: accesscontrol-service
-          uri: http://host.docker.internal:8082
+          uri: lb://accesscontrol-service
           predicates:
             - Path=/api/auth/**
             - Method=GET, POST, OPTIONS
@@ -65,3 +59,14 @@ spring:
             - Method=GET, POST, OPTIONS
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri=: http://host.docker.internal:8181/realms/Chess-TPA
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411
