@@ -7,19 +7,19 @@ eureka:
 
 keycloak:
   realm: Chess-TPA
-  auth-server-url: http://localhost:8181
+  auth-server-url: http://host.docker.internal:8181
   ssl-required: external
-  resource: chess-tpa
+  resource: Chess-TPA
   credentials:
-    secret: OCBVjq63DZ5HInaJ1bRKSM9X09mNWm4I
+    secret: WWRPM94d4AIdH2sxCF4o9OCC5VO3SxlO
   use-resource-role-mappings: true
   bearer-only: true
 
 
 management:
-  tracing:
-    sampling:
-      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411
   health:
     circuitbreakers:
       enabled: true
