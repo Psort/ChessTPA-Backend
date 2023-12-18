@@ -6,3 +6,8 @@ eureka:
     fetchRegistry: false
     serviceUrl:
       defaultZone: http://host.docker.internal:8761/eureka/
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411
