@@ -6,12 +6,8 @@ eureka:
       defaultZone: http://eureka:password@host.docker.internal:8761/eureka
 
 keycloak:
-  realm: Chess-TPA
   auth-server-url: http://host.docker.internal:8181
   ssl-required: external
-  resource: Chess-TPA
-  credentials:
-    secret: WWRPM94d4AIdH2sxCF4o9OCC5VO3SxlO
   use-resource-role-mappings: true
   bearer-only: true
 
