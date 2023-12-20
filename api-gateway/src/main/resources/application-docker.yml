@@ -1,0 +1,72 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@host.docker.internal:8761/eureka
+
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: discovery-server
+          uri: http://host.docker.internal:8761
+          predicates:
+            - Path=/eureka/web
+            - Method=GET, POST, OPTIONS
+          filters:
+            - SetPath=/
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+        - id: queue-service
+          uri: lb://queue-service
+          predicates:
+            - Path=/api/queue/**
+        - id: accesscontrol-service
+          uri: lb://accesscontrol-service
+          predicates:
+            - Path=/api/auth/**
+            - Method=GET, POST, OPTIONS
+        - id: game-service
+          uri: lb://game-service
+          predicates:
+            - Path=/api/game/**
+        - id: websocket-service
+          uri: lb://websocket-service
+          predicates:
+            - Path=/stomp/**
+        - id: stockfish-service
+          uri: http://localhost:8060
+          predicates:
+            - Path=/stockfish/**
+        - id: chessengine-service
+          uri: lb://chessengine-service
+          predicates:
+            - Path=/api/engine/**
+            - Method=GET, POST, OPTIONS
+        - id: analysis-service
+          uri: http://localhost:5000
+          predicates:
+            - Path=/api/analysis/**
+            - Method=GET, POST, OPTIONS
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri=: http://host.docker.internal:8181/realms/Chess-TPA
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411

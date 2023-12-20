@@ -22,11 +22,15 @@ public class ChessEngineService {
     private final ChessEngine chessEngine;
     public Set<MoveResponse> getPossiblesMoves(MoveRequest request) {
         String castles = convertCastlesToString(request.getCastles());
+//        System.out.println(request.getBoardState());
+//        System.out.println(request.getPiecePosition());
         String[] moves = chessEngine.getPossibleMovesForPosition(request.getBoardState(), request.getPiecePosition(), castles).split("/");
+
         return convertMoves(moves);
     }
     public GameStatusResponse getGameStatus(GameStatusRequest request) {
         String castles = convertCastlesToString(request.getCastles());
+        System.out.println(request.getColor());
         String status = chessEngine.getGameStatus(request.getBoardState(), castles, request.getColor());
         return convertStatus(status);
     }
@@ -43,6 +47,8 @@ public class ChessEngineService {
                 .collect(Collectors.toSet());
     }
     private GameStatusResponse convertStatus(String status){
+        System.out.print("1:");
+        System.out.println(status);
         return Objects.equals(status, "Checkmate") ? GameStatusResponse.CHECKMATE :
                 Objects.equals(status, "Pat") ? GameStatusResponse.PAT :
                         GameStatusResponse.GAME;

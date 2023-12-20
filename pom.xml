@@ -35,6 +35,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>1.16.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
@@ -43,5 +50,50 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:19-jre</image>
+                    </from>
+                    <to>
+                        <image>registry.hub.docker.com/tymsztrumpf/${project.artifactId}:latest</image>
+                    </to>
+                    <!-- Dodaj sekcję extraDirectories -->
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>${project.build.directory}/classes</from>
+                                <into>/path/in/container</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
+                    <!-- Ustaw tryb containerizing na exploded, aby śledzić zmiany w czasie rzeczywistym -->
+                    <containerizingMode>exploded</containerizingMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>dockerBuild</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

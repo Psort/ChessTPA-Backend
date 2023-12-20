@@ -1,0 +1,17 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:password@host.docker.internal:8761/eureka
+
+spring:
+  data:
+    mongodb:
+      host: mongo
+      port: 27017
+      database: game-service
+      uri: mongodb://host.docker.internal:27017
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://host.docker.internal:9411
