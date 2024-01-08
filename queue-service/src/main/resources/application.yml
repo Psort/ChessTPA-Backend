@@ -8,6 +8,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: event:com.tpa.useraccessservice.event.LogEvent
   application:
     name: queue-service
 
