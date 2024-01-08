@@ -147,6 +147,9 @@ services:
       - "8082:8082"
     environment:
       - "SPRING_PROFILES_ACTIVE=docker"
+      - "KEYCLOAK_CREDENTIALS_SECRET=${KEYCLOAK_CREDENTIALS_SECRET}"
+      - "KEYCLOAK_REALM = ${KEYCLOAK_REALM}"
+      - "KEYCLOAK_RESOURCE = ${KEYCLOAK_RESOURCE}"
     depends_on:
       - discovery-server
 
