@@ -1,4 +1,4 @@
-package org.tpa.useraccessservice.config;
+package com.tpa.useraccessservice.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package org.tpa.useraccessservice.config;
+package com.tpa.useraccessservice.config;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Value;

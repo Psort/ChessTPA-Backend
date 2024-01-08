@@ -1,4 +1,4 @@
-package org.tpa.useraccessservice;
+package com.tpa.useraccessservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

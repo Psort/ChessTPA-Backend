@@ -1,16 +1,18 @@
-package org.tpa.useraccessservice.controller;
+package com.tpa.useraccessservice.controller;
 
+import com.tpa.useraccessservice.service.LogService;
+import com.tpa.useraccessservice.service.UserAccessService;
+import com.tpa.useraccessservice.type.LogType;
 import lombok.RequiredArgsConstructor;
 
-import org.tpa.useraccessservice.dto.LoginRequest;
-import org.tpa.useraccessservice.dto.RefreshTokenRequest;
-import org.tpa.useraccessservice.dto.SignUpRequest;
+import com.tpa.useraccessservice.dto.LoginRequest;
+import com.tpa.useraccessservice.dto.RefreshTokenRequest;
+import com.tpa.useraccessservice.dto.SignUpRequest;
 
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.tpa.useraccessservice.service.UserAccessService;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -19,7 +21,6 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class UserAccessController {
-
     private final UserAccessService userAccessService;
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)

@@ -1,5 +1,6 @@
-package org.tpa.useraccessservice.service;
+package com.tpa.useraccessservice.service;
 
+import com.tpa.useraccessservice.type.LogType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
@@ -9,11 +10,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.tpa.useraccessservice.config.KeycloakProvider;
-import org.tpa.useraccessservice.dto.LoginRequest;
-import org.tpa.useraccessservice.dto.RefreshTokenRequest;
-import org.tpa.useraccessservice.dto.SignUpRequest;
+import com.tpa.useraccessservice.config.KeycloakProvider;
+import com.tpa.useraccessservice.dto.LoginRequest;
+import com.tpa.useraccessservice.dto.RefreshTokenRequest;
+import com.tpa.useraccessservice.dto.SignUpRequest;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -29,15 +29,17 @@ import java.util.concurrent.TimeoutException;
 @RequiredArgsConstructor
 @Service
 public class UserAccessService {
-    private final KeycloakProvider keycloakProvider;
-    private final WebClient.Builder webClientBuilderWithLB;
-    private final WebClient.Builder webClientBuilder;
+    
     @Value("${keycloak.realm}")
     public String realm;
     @Value("${keycloak.resource}")
     public String clientID;
     @Value("${keycloak.credentials.secret}")
     public String clientSecret;
+    
+    private final KeycloakProvider keycloakProvider;
+    private final LogService logService;
+    private final WebClientService webClientService;
 
     /**
      * login user through keycloack
@@ -58,24 +60,13 @@ public class UserAccessService {
     @Retry(name = "user-service")
     public CompletableFuture<String> registerUser(SignUpRequest request){
         UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
-        CredentialRepresentation credentialRepresentation = createPasswordCredentials(request.getPassword());
-        UserRepresentation kcUser = new UserRepresentation();
-        kcUser.setUsername(request.getUsername());
-        kcUser.setCredentials(Collections.singletonList(credentialRepresentation));
-        kcUser.setEmail(request.getEmail());
-        kcUser.setEnabled(true);
-        kcUser.setEmailVerified(false);
-
-        webClientBuilderWithLB.build().post().uri("http://user-service/api/user")
-                .bodyValue(request)
-                .retrieve()
-                        .toBodilessEntity()
-                                .block();
-
+        UserRepresentation kcUser = createKeycloakUser(request);
+        webClientService.sendUserToAddInUserService(request);
         usersResource.create(kcUser);
-
+        logService.send(LogType.INFO,"User registered successfully");
         return CompletableFuture.completedFuture("User registered successfully");
     }
+
     /**
      * get new access token from keycloak using refresh token
      * @param refreshTokenRequest
@@ -83,25 +74,15 @@ public class UserAccessService {
      */
 
     public AccessTokenResponse refreshAccessToken(RefreshTokenRequest refreshTokenRequest) {
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-        requestBody.add("client_id", clientID);
-        requestBody.add("grant_type", OAuth2Constants.REFRESH_TOKEN);
-        requestBody.add("refresh_token", refreshTokenRequest.getRefreshToken());
-        requestBody.add("client_secret", clientSecret);
+        //RequestBody
+        MultiValueMap<String, String> requestBody = createRequestBodyParam(refreshTokenRequest);
+        //Headers
+        HttpHeaders headers = createHeaders();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        AccessTokenResponse accessTokenResponse = webClientBuilder.build()
-                .post()
-                .uri("http://localhost:8181/realms/Chess-TPA/protocol/openid-connect/token")
-                .headers(httpHeaders -> httpHeaders.addAll(headers))
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(AccessTokenResponse.class)
-                .block();
-        return accessTokenResponse;
+        return webClientService.getRefreshTokenFormKeycloak(headers,requestBody);
     }
+
+
     /**
      * creates password credentials for new keycloack user
      * @param password
@@ -116,9 +97,38 @@ public class UserAccessService {
     }
 
     private CompletableFuture<String> fallback(SignUpRequest signUpRequest, RuntimeException e) {
+        logService.send(LogType.ERROR,"notok");
         return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
+
     private CompletableFuture<String> fallback(SignUpRequest signUpRequest, TimeoutException e) {
+        logService.send(LogType.ERROR,"notok");
         return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
+    }
+
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        return headers;
+    }
+
+    private MultiValueMap<String, String> createRequestBodyParam(RefreshTokenRequest refreshTokenRequest) {
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientID);
+        requestBody.add("grant_type", OAuth2Constants.REFRESH_TOKEN);
+        requestBody.add("refresh_token", refreshTokenRequest.getRefreshToken());
+        requestBody.add("client_secret", clientSecret);
+        return requestBody;
+    }
+
+    private UserRepresentation createKeycloakUser(SignUpRequest request) {
+        CredentialRepresentation credentialRepresentation = createPasswordCredentials(request.getPassword());
+        UserRepresentation kcUser = new UserRepresentation();
+        kcUser.setUsername(request.getUsername());
+        kcUser.setCredentials(Collections.singletonList(credentialRepresentation));
+        kcUser.setEmail(request.getEmail());
+        kcUser.setEnabled(true);
+        kcUser.setEmailVerified(false);
+        return kcUser;
     }
 }

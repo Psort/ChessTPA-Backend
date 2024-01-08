@@ -1,4 +1,4 @@
-package org.tpa.useraccessservice.dto;
+package com.tpa.useraccessservice.dto;
 
 import lombok.Getter;
 
