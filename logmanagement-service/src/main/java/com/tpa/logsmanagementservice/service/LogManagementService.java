@@ -17,7 +17,13 @@ public class LogManagementService {
     private final LogManagementRepository logManagementRepository;
     public void saveLog(LogEvent logEvent) {
         
-        Log log = Log.builder().message(logEvent.getMessage()).serviceName(logEvent.getServiceName()).type(logEvent.getType()).build();
+        Log log = Log.builder()
+                .message(logEvent.getMessage())
+                .serviceName(logEvent.getServiceName())
+                .type(logEvent.getType())
+                .timestamp(logEvent.getTimestamp())
+                .build();
+
         logManagementRepository.save(log);
     }
 }
