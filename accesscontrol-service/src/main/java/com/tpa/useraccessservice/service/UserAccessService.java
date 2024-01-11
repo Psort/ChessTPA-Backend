@@ -1,13 +1,18 @@
 package com.tpa.useraccessservice.service;
 
+import com.tpa.useraccessservice.exception.AccessRequestException;
+import com.tpa.useraccessservice.exception.AccessServerException;
 import com.tpa.useraccessservice.type.LogType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.ProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.OAuth2Constants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import com.tpa.useraccessservice.config.KeycloakProvider;
@@ -47,24 +52,43 @@ public class UserAccessService {
      * @return AccessTokenResponse
      */
     public AccessTokenResponse login(LoginRequest loginRequest){
-        Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword());
-        return  keycloak.tokenManager().getAccessToken();
+        try {
+            Keycloak keycloak = keycloakProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword());
+            return keycloak.tokenManager().getAccessToken();
+
+        } catch (ProcessingException e) {
+            logService.send(LogType.ERROR, "Error during user login, keycloak server is shut down");
+            throw new AccessServerException("Server problem, please try again later");
+
+        }  catch (NotAuthorizedException e) {
+            throw new AccessRequestException("Invalid username or password, please try again");
+        }
     }
 
     /**
      * creates new user in keycloack
      * @param request
      */
-    @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
+    @CircuitBreaker(name = "user-service", fallbackMethod = "fallbackRegister")
     @TimeLimiter(name = "user-service")
     @Retry(name = "user-service")
+    @Transactional
     public CompletableFuture<String> registerUser(SignUpRequest request){
-        UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
-        UserRepresentation kcUser = createKeycloakUser(request);
-        webClientService.sendUserToAddInUserService(request);
-        usersResource.create(kcUser);
-        logService.send(LogType.INFO,"User registered successfully");
-        return CompletableFuture.completedFuture("User registered successfully");
+        try {
+            UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
+            UserRepresentation kcUser = createKeycloakUser(request);
+            usersResource.create(kcUser);
+            webClientService.sendToUserService(request);
+            logService.send(LogType.INFO, "User registered successfully");
+            return CompletableFuture.completedFuture("User registered successfully");
+
+        } catch (ProcessingException e) {
+            logService.send(LogType.ERROR, "Error during user registry, keycloak server is shut down");
+            throw new AccessServerException("Server problem, please try again later");
+
+        } catch (AccessRequestException e) {
+            return CompletableFuture.completedFuture(e.getMessage());
+        }
     }
 
     /**
@@ -95,17 +119,6 @@ public class UserAccessService {
         passwordCredentials.setValue(password);
         return passwordCredentials;
     }
-
-    private CompletableFuture<String> fallback(SignUpRequest signUpRequest, RuntimeException e) {
-        logService.send(LogType.ERROR,"notok");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
-    }
-
-    private CompletableFuture<String> fallback(SignUpRequest signUpRequest, TimeoutException e) {
-        logService.send(LogType.ERROR,"notok");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
-    }
-
     private HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -130,5 +143,14 @@ public class UserAccessService {
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
         return kcUser;
+    }
+    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, RuntimeException e) {
+        logService.send(LogType.ERROR,"There was a problem during user registry, cannot find user-service instance.");
+        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
+    }
+
+    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, TimeoutException e) {
+        logService.send(LogType.ERROR,"There was a problem during user registry, user-service did not respond on time.");
+        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 }
