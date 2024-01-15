@@ -1,3 +1,5 @@
+package RepositoryUnitTest;
+
 import com.tpa.userservice.UserServiceApplication;
 import com.tpa.userservice.model.User;
 import com.tpa.userservice.repostiory.UserRepository;
