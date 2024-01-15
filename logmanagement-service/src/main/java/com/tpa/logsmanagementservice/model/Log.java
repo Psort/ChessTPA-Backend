@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.ZonedDateTime;
 
 
 @Data
@@ -22,6 +23,6 @@ public class Log {
     private String serviceName;
     private LogType type;
     private String message;
-
+    private ZonedDateTime timestamp;
 
 }
