@@ -25,36 +25,27 @@ import static java.lang.Math.pow;
 public class UserService {
     private final UserRepository userRepository;
     @Transactional
-    public void createUser(SignUpRequest request) {
-        try {
+    public UserResponse createUser(SignUpRequest request) {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-                throw new UserRequestException("User already exist");
+                throw new UserRequestException("User already exists");
             }
 
-            double defaultEloRating = 800;
-
-            User user = User.builder()
-                    .email(request.getEmail())
-                    .username(request.getUsername())
-                    .eloRating(defaultEloRating)
-                    .build();
+            User user = buildUser(request);
 
             userRepository.save(user);
 
             log.info("User with email {} added", request.getEmail());
 
-        } catch (Exception e) {
-            log.warn("Failed to save user to database, {}", e.getMessage());
-            throw new UserRequestException("Failed during database operation");
-        }
+            return buildUserResponse(user);
     }
+
 
     public UserResponse getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(user -> UserResponse.builder()
                         .username(user.getUsername())
                         .build())
-                .orElseThrow(() -> new UserRequestException("User does not exist"));
+                .orElseThrow(() -> new UserRequestException("User does not exists"));
     }
 
     public void addGame(NewGameRequest request) {
@@ -79,7 +70,7 @@ public class UserService {
             userRepository.saveAll(List.of(firstPlayer, secondPlayer));
 
         } else {
-           throw new UserRequestException("User does not exist");
+           throw new UserRequestException("User does not exists");
         }
     }
 
@@ -131,5 +122,22 @@ public class UserService {
                 + (float) (Math.pow(
                 10, 1.0f * (firstPlayerEloRating - secondPlayerEloRating)
                         / 400)));
+    }
+
+    private UserResponse buildUserResponse(User user) {
+        return UserResponse.builder()
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
+    }
+
+    private User buildUser(SignUpRequest request) {
+        double defaultEloRating = 800;
+
+        return User.builder()
+                .email(request.getEmail())
+                .username(request.getUsername())
+                .eloRating(defaultEloRating)
+                .build();
     }
 }

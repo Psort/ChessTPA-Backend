@@ -19,8 +19,8 @@ public class UserController {
     private final UserService userService;
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void create(@RequestBody SignUpRequest request){
-        userService.createUser(request);
+    public UserResponse create(@RequestBody SignUpRequest request){
+        return userService.createUser(request);
     }
 
     @GetMapping
