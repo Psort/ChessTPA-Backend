@@ -9,21 +9,19 @@ import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
+import com.tpa.gameservice.type.LogType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class GameService {
+    private final LogService logService;
     private final GameRepository gameRepository;
     private final WebClient.Builder webClientBuilder;
 
@@ -169,6 +167,7 @@ public class GameService {
         return null;
     }
     private String fallback(NewGameRequest request, RuntimeException e) {
+        logService.send(LogType.ERROR, "Error while creating a game");
         return "Can not create game right now, please try again later";
     }
 }
