@@ -16,7 +16,7 @@ public class LogConsumer {
     private final LogManagementService logManagementService;
     @KafkaListener(topics = "logManagementTopic",groupId = "logManagementId")
     public void handleNotification(LogEvent log) {
-        System.out.println(log.getType());
+        System.out.println(log.getServiceName() + log.getType() + log.getMessage());
         logManagementService.saveLog(log);
     }
 
