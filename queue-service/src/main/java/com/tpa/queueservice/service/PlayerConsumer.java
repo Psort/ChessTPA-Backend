@@ -1,20 +1,14 @@
 package com.tpa.queueservice.service;
 
-import com.tpa.queueservice.controller.QueueController;
 import com.tpa.queueservice.dto.NewGameRequest;
+import com.tpa.queueservice.type.GameType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 @Service
 @RequiredArgsConstructor
@@ -38,6 +32,7 @@ public class PlayerConsumer {
                     .bodyValue(NewGameRequest.builder()
                             .firstPlayerUsername(firstPlayer)
                             .secondPlayerUsername(secondPlayer)
+                            .gameType(GameType.INFINITE)
                             .build())
                     .retrieve().bodyToMono(String.class).block();
             queueService.startGame(newGameId);
