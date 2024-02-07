@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.util.*;
 
 @Service
@@ -28,6 +29,16 @@ public class GameService {
     @Transactional
     @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
     public String createGame(NewGameRequest newGameRequest) {
+
+        Game game = buildGame(newGameRequest);
+
+        gameRepository.save(game);
+
+        sendGameToUserService(game.getId(), newGameRequest.getFirstPlayerUsername(), newGameRequest.getSecondPlayerUsername());
+
+        return game.getId();
+    }
+    private Game buildGame(NewGameRequest newGameRequest) {
         List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
                 CastleType.SHORTWHITE.getValue(),
                 CastleType.LONGBLACK.getValue(),
@@ -44,19 +55,26 @@ public class GameService {
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
 
-        Game game = Game.builder()
-                .players(new Player[]{firstPlayer, secondPlayer})
-                .history(List.of(defaultGameState))
-                .actualColor(PlayerColor.WHITE)
-                .build();
+        int gameDuration = newGameRequest.getGameType().getMinutes();
 
-        gameRepository.save(game);
-
-        sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
-
-        return game.getId();
+        if(gameDuration > 0) {
+            return Game.builder()
+                    .players(new Player[]{firstPlayer, secondPlayer})
+                    .history(List.of(defaultGameState))
+                    .actualColor(PlayerColor.WHITE)
+                    .gameType(newGameRequest.getGameType())
+                    .whitePlayerTime(Duration.ofMinutes(gameDuration))
+                    .blackPlayerTime(Duration.ofMinutes(gameDuration))
+                    .build();
+        } else {
+            return Game.builder()
+                    .players(new Player[]{firstPlayer, secondPlayer})
+                    .history(List.of(defaultGameState))
+                    .actualColor(PlayerColor.WHITE)
+                    .gameType(newGameRequest.getGameType())
+                    .build();
+        }
     }
-
     public List<GameResponse> getAllGamesForUser(String username) {
         List<Game> optionalGames = gameRepository.findByPlayersUsernameAndHistoryStatusIsNotIn(username,List.of("CHECKMATE","PAT"));
         List<GameResponse> games = new ArrayList<>();
@@ -72,18 +90,12 @@ public class GameService {
 
     public GameResponse getGame(String gameId) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
-        if (optionalGame.isPresent()) {
-
-            GameResponse game = GameResponse.builder()
-                    .id(optionalGame.get().getId())
-                    .players(optionalGame.get().getPlayers())
-                    .history(optionalGame.get().getHistory())
-                    .actualColor(optionalGame.get().getActualColor())
-                    .build();
-
-        return game;
-    }
-        else return null;
+        return optionalGame.map(game -> GameResponse.builder()
+                .id(game.getId())
+                .players(game.getPlayers())
+                .history(game.getHistory())
+                .actualColor(game.getActualColor())
+                .build()).orElse(null);
     }
 
     public String getGameResponseAsJson(String gameId) {
@@ -151,7 +163,7 @@ public class GameService {
                 .block();
     }
 
-    public List<String> getMovesHistory(String gameId){
+    public List<String> getMovesHistory(String gameId) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
 
         if(optionalGame.isPresent()) {
@@ -166,6 +178,7 @@ public class GameService {
         //todo
         return null;
     }
+
     private String fallback(NewGameRequest request, RuntimeException e) {
         logService.send(LogType.ERROR, "Error while creating a game");
         return "Can not create game right now, please try again later";

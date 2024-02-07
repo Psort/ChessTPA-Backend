@@ -14,7 +14,7 @@ spring:
         spring:
           json:
             type:
-              mapping: event:com.tpa.useraccessservice.event.LogEvent
+              mapping: event:com.tpa.gameservice.event.LogEvent
 
 
 

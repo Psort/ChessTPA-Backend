@@ -1,9 +1,6 @@
 package com.tpa.gameservice.dto;
 
-import com.tpa.gameservice.model.Game;
-import com.tpa.gameservice.model.GameState;
-import com.tpa.gameservice.model.Player;
-import com.tpa.gameservice.model.PlayerColor;
+import com.tpa.gameservice.model.*;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,4 +13,5 @@ public class GameResponse {
     private List<GameState> history;
     private Player[] players;
     private PlayerColor actualColor;
+    private GameType gameType;
 }
