@@ -10,6 +10,7 @@ import java.util.Objects;
 public class UserResponse {
     String username;
     String email;
+    Double eloRating;
 
     @Override
     public boolean equals(Object that) {

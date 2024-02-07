@@ -44,6 +44,7 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .map(user -> UserResponse.builder()
                         .username(user.getUsername())
+                        .eloRating(user.getEloRating())
                         .build())
                 .orElseThrow(() -> new UserRequestException("User does not exists"));
     }
