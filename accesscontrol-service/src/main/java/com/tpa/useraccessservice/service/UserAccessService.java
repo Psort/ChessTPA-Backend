@@ -61,6 +61,7 @@ public class UserAccessService {
             throw new AccessServerException("Server problem, please try again later");
 
         }  catch (NotAuthorizedException e) {
+            logService.send(LogType.ERROR, "Invalid username or password, please try again");
             throw new AccessRequestException("Invalid username or password, please try again");
         }
     }
@@ -79,7 +80,7 @@ public class UserAccessService {
             UserRepresentation kcUser = createKeycloakUser(request);
             usersResource.create(kcUser);
             webClientService.sendToUserService(request);
-            logService.send(LogType.INFO, "User registered successfully");
+            logService.send(LogType.INFO, "User {} registered successfully", kcUser.getUsername());
             return CompletableFuture.completedFuture("User registered successfully");
 
         } catch (ProcessingException e) {

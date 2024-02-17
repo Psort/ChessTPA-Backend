@@ -14,16 +14,17 @@ import java.time.ZonedDateTime;
 public class LogService {
     private final KafkaTemplate<String, LogEvent> kafkaTemplate;
 
-    public void send(LogType type, String message) {
-        String serviceName = "AccessControl";
+    public void send(LogType type, String message, Object... args) {
+        String serviceName = "AccessControl ";
+        String formattedMessage = String.format(message, args);
+
         kafkaTemplate.send(
                 "logManagementTopic",
                 LogEvent.builder()
-                .serviceName(serviceName)
-                .type(type)
-                .message(message)
-                .timestamp(ZonedDateTime.now(ZoneId.of("Europe/Warsaw")))
-                .build() );
-
+                        .serviceName(serviceName)
+                        .type(type)
+                        .message(formattedMessage)
+                        .timestamp(ZonedDateTime.now(ZoneId.of("Europe/Warsaw")))
+                        .build());
     }
 }
