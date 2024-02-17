@@ -1,5 +1,7 @@
 package com.tpa.queueservice.service;
 
+import com.tpa.queueservice.dto.QueueRequest;
+import com.tpa.queueservice.event.QueueEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,21 +14,25 @@ import java.util.concurrent.ExecutionException;
 @Service
 @RequiredArgsConstructor
 public class QueueService {
-    private static final String TOPIC = "players-queue";
     private CompletableFuture<String> gameStartFuture = new CompletableFuture<>();
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, QueueEvent> kafkaTemplate;
 
-    public String addToQueue(String username) {
+    public String addToQueue(QueueRequest queueRequest){
         try {
-            kafkaTemplate.send(TOPIC, username);
+            kafkaTemplate.send(
+                    queueRequest.getQueueType().getQueueStringType(),
+                    QueueEvent.builder()
+                            .username(queueRequest.getUsername())
+                            .eloRating(queueRequest.getEloRating())
+                            .build());
             String result = gameStartFuture.get();
             gameStartFuture = new CompletableFuture<>();
             return result;
         } catch (InterruptedException | ExecutionException e) {
             // toDo
         }
-        return username;
+        return "to do";
     }
     public void startGame(String gameId) {
         gameStartFuture.complete(gameId);

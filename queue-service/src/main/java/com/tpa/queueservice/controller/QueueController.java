@@ -1,6 +1,7 @@
 package com.tpa.queueservice.controller;
 
 
+import com.tpa.queueservice.dto.QueueRequest;
 import com.tpa.queueservice.service.QueueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,10 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class QueueController {
     private final QueueService queueService;
 
+
     @PostMapping("/join")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<String> joinGame(@RequestParam String username) {
-        String gameId = queueService.addToQueue(username);
+    public ResponseEntity<String> joinUnLimitedGame(@RequestBody QueueRequest queueRequest) {
+        String gameId = queueService.addToQueue(queueRequest);
         return ResponseEntity.ok(gameId);
     }
 }

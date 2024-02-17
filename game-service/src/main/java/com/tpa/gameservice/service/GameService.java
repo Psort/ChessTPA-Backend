@@ -22,39 +22,23 @@ import java.util.*;
 @AllArgsConstructor
 public class GameService {
     private final LogService logService;
+    private final WebClientService webClientService;
     private final GameRepository gameRepository;
-    private final WebClient.Builder webClientBuilder;
 
     @Transactional
     @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
-    public String createGame(NewGameRequest newGameRequest) {
-        List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
-                CastleType.SHORTWHITE.getValue(),
-                CastleType.LONGBLACK.getValue(),
-                CastleType.SHORTBLACK.getValue());
-
-        String defaultBoardState = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-
-        GameState defaultGameState = GameState.builder()
-                .boardState(defaultBoardState)
-                .status(GameStatus.GAME)
-                .castleTypes(defaultCastleTypes)
-                .build();
+    public Game createGame(NewGameRequest newGameRequest) {
 
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
 
-        Game game = Game.builder()
-                .players(new Player[]{firstPlayer, secondPlayer})
-                .history(List.of(defaultGameState))
-                .actualColor(PlayerColor.WHITE)
-                .build();
+        Game game = createDefaulttdGame( firstPlayer,secondPlayer);
 
         gameRepository.save(game);
 
-        sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
+        webClientService.sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
 
-        return game.getId();
+        return game;
     }
 
     public List<GameResponse> getAllGamesForUser(String username) {
@@ -87,20 +71,10 @@ public class GameService {
     }
 
     public String getGameResponseAsJson(String gameId) {
-        return convertToGameResponseAsJson(gameId);
-    }
-
-    private String convertToGameResponseAsJson(String gameId) {
         GameResponse gameResponse = getGame(gameId);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.writeValueAsString(gameResponse);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return convertToGameResponseAsJson(gameResponse);
     }
+
     public void safeGameState(SafeGameStateRequest safeGameStateRequest) {
         Optional<Game> optionalGame = gameRepository.findById(safeGameStateRequest.getGameId());
 
@@ -123,34 +97,6 @@ public class GameService {
             gameRepository.save(game);
         }
     }
-
-    private List<String> calculateCastle(List<String> castleTypes, String startingCoordinates) {
-        switch (startingCoordinates) {
-            case "a1" -> castleTypes.remove("q");
-            case "h1" -> castleTypes.remove("k");
-            case "a8" -> castleTypes.remove("K");
-            case "h8" -> castleTypes.remove("Q");
-            case "e1" -> castleTypes.removeAll(List.of("k", "q"));
-            case "e8" -> castleTypes.removeAll(List.of("K", "Q"));
-        }
-        return castleTypes;
-    }
-
-    private void sendGameToUserService(String gameId, String firstPlayerUsername, String secondPlayerUsername) {
-
-        GameToUserRequest request = GameToUserRequest.builder()
-                .gameId(gameId)
-                .firstPlayerUsername(firstPlayerUsername)
-                .secondPlayerUsername(secondPlayerUsername)
-                .build();
-
-        webClientBuilder.build().post().uri("http://user-service/api/user/game")
-                .bodyValue(request)
-                .retrieve()
-                .toBodilessEntity()
-                .block();
-    }
-
     public List<String> getMovesHistory(String gameId){
         Optional<Game> optionalGame = gameRepository.findById(gameId);
 
@@ -166,8 +112,52 @@ public class GameService {
         //todo
         return null;
     }
+
+    private String convertToGameResponseAsJson(GameResponse gameResponse) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(gameResponse);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private List<String> calculateCastle(List<String> castleTypes, String startingCoordinates) {
+        switch (startingCoordinates) {
+            case "a1" -> castleTypes.remove("q");
+            case "h1" -> castleTypes.remove("k");
+            case "a8" -> castleTypes.remove("K");
+            case "h8" -> castleTypes.remove("Q");
+            case "e1" -> castleTypes.removeAll(List.of("k", "q"));
+            case "e8" -> castleTypes.removeAll(List.of("K", "Q"));
+        }
+        return castleTypes;
+    }
+
+    private Game createDefaulttdGame(Player firstPlayer,Player secondPlayer){
+        List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
+                CastleType.SHORTWHITE.getValue(),
+                CastleType.LONGBLACK.getValue(),
+                CastleType.SHORTBLACK.getValue());
+
+        String defaultBoardState = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+        GameState defaultGameState = GameState.builder()
+                .boardState(defaultBoardState)
+                .status(GameStatus.GAME)
+                .castleTypes(defaultCastleTypes)
+                .build();
+
+        return Game.builder()
+                .players(new Player[]{firstPlayer, secondPlayer})
+                .history(List.of(defaultGameState))
+                .actualColor(PlayerColor.WHITE)
+                .build();
+    }
     private String fallback(NewGameRequest request, RuntimeException e) {
         logService.send(LogType.ERROR, "Error while creating a game");
         return "Can not create game right now, please try again later";
     }
+
 }

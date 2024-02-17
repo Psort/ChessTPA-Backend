@@ -4,6 +4,7 @@ package com.tpa.gameservice.controller;
 import com.tpa.gameservice.dto.GameResponse;
 import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
+import com.tpa.gameservice.model.Game;
 import com.tpa.gameservice.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,8 @@ public class GameController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> createGame(@RequestBody NewGameRequest newGameRequest){
-        String gameId = gameService.createGame(newGameRequest);
-        return ResponseEntity.ok(gameId);
+        Game game = gameService.createGame(newGameRequest);
+        return ResponseEntity.ok(game.getId());
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
