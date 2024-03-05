@@ -4,7 +4,6 @@ package com.tpa.gameservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpa.gameservice.dto.GameResponse;
-import com.tpa.gameservice.dto.GameToUserRequest;
 import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
@@ -14,7 +13,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
+
 
 import java.util.*;
 
@@ -56,18 +55,12 @@ public class GameService {
 
     public GameResponse getGame(String gameId) {
         Optional<Game> optionalGame = gameRepository.findById(gameId);
-        if (optionalGame.isPresent()) {
-
-            GameResponse game = GameResponse.builder()
-                    .id(optionalGame.get().getId())
-                    .players(optionalGame.get().getPlayers())
-                    .history(optionalGame.get().getHistory())
-                    .actualColor(optionalGame.get().getActualColor())
-                    .build();
-
-        return game;
-    }
-        else return null;
+        return optionalGame.map(game -> GameResponse.builder()
+                .id(game.getId())
+                .players(game.getPlayers())
+                .history(game.getHistory())
+                .actualColor(game.getActualColor())
+                .build()).orElse(null);
     }
 
     public String getGameResponseAsJson(String gameId) {

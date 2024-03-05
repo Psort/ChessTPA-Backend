@@ -23,7 +23,7 @@ public class LogService {
                 .serviceName(serviceName)
                 .type(type).message(message)
                 .timestamp(ZonedDateTime.now(ZoneId.of("Europe/Warsaw")))
-                .build() );
+                .build());
 
     }
 }

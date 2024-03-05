@@ -1,9 +1,6 @@
 package com.tpa.gameservice.dto;
 
-import com.tpa.gameservice.model.Game;
-import com.tpa.gameservice.model.GameState;
-import com.tpa.gameservice.model.Player;
-import com.tpa.gameservice.model.PlayerColor;
+import com.tpa.gameservice.model.*;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -25,4 +22,5 @@ public class GameResponse {
         if(!(that instanceof GameResponse thatResponse)) return false;
         return Objects.equals(this.history, thatResponse.history) && Arrays.equals(this.players, thatResponse.players) && Objects.equals(this.actualColor, thatResponse.actualColor) ;
     }
+    private GameType gameType;
 }

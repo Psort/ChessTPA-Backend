@@ -6,24 +6,21 @@ import com.tpa.userservice.dto.UserResponse;
 import com.tpa.userservice.exception.UserRequestException;
 import com.tpa.userservice.model.User;
 import com.tpa.userservice.repostiory.UserRepository;
+import com.tpa.userservice.type.LogType;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-
-import static java.lang.Math.pow;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final LogService logService;
     @Transactional
     public UserResponse createUser(SignUpRequest request) {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -35,6 +32,7 @@ public class UserService {
             userRepository.save(user);
 
             log.info("User with email {} added", request.getEmail());
+            logService.send(LogType.INFO, "User with email {} added", request.getEmail());
 
             return buildUserResponse(user);
     }
@@ -44,6 +42,7 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .map(user -> UserResponse.builder()
                         .username(user.getUsername())
+                        .eloRating(user.getEloRating())
                         .build())
                 .orElseThrow(() -> new UserRequestException("User does not exists"));
     }
