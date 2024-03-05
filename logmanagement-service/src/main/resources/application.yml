@@ -21,10 +21,10 @@ spring:
       properties:
         spring:
           json:
+            trusted:
+              packages: "*"
             type:
               mapping: event:com.tpa.logsmanagementservice.event.LogEvent
-
-
 
 server:
   port: 0
