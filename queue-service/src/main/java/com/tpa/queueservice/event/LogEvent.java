@@ -9,8 +9,8 @@ import java.time.ZonedDateTime;
 @Getter
 @Builder
 public class LogEvent {
-    private String serviceName;
-    private LogType type;
-    private String message;
-    private ZonedDateTime timestamp;
+    private final String serviceName;
+    private final LogType type;
+    private final String message;
+    private final ZonedDateTime timestamp;
 }
