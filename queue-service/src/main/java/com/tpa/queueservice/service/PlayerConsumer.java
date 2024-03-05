@@ -8,113 +8,98 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
+
 @Service
 @RequiredArgsConstructor
 public class PlayerConsumer {
     private final WebClient.Builder webClientBuilder;
     private static final int PLAYERS_REQUIRED = 2;
+    private Map<Double, List<String>> oneMinQueue = new HashMap<>();
+    private Map<Double, List<String>> threeMinQueue = new HashMap<>();
+    private Map<Double, List<String>> fiveMinQueue = new HashMap<>();
+    private Map<Double, List<String>> tenMinQueue = new HashMap<>();
+    private Map<Double, List<String>> unlimitedQueue = new HashMap<>();
 
-    private Queue<String> oneMinQueue = new LinkedList<>();
-    private Queue<String> threeMinQueue = new LinkedList<>();
-    private Queue<String> fiveMinQueue = new LinkedList<>();
-    private Queue<String> tenMinQueue = new LinkedList<>();
-    private Queue<String> unlimitedQueue = new LinkedList<>();
 
     private final QueueService queueService;
 
     @KafkaListener(topics = "one-min-queue", groupId = "queue-id")
     public void setOneMinQueue(QueueEvent queueEvent) {
-        oneMinQueue.add(queueEvent.getUsername());
-        if (oneMinQueue.size() >= PLAYERS_REQUIRED) {
-            String firstPlayer = oneMinQueue.poll();
-            String secondPlayer = oneMinQueue.poll();
-            String newGameId =  webClientBuilder.build()
-                    .post()
-                    .uri("http://game-service/api/game/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(NewGameRequest.builder()
-                            .firstPlayerUsername(firstPlayer)
-                            .secondPlayerUsername(secondPlayer)
-                            .build())
-                    .retrieve().bodyToMono(String.class).block();
-            queueService.startGame(newGameId);
-        }
+        addToQueue(queueEvent, oneMinQueue);
     }
     @KafkaListener(topics = "three-min-queue", groupId = "queue-id")
     public void consume(QueueEvent queueEvent) {
-        threeMinQueue.add(queueEvent.getUsername());
-        if (threeMinQueue.size() >= PLAYERS_REQUIRED) {
-            String firstPlayer = threeMinQueue.poll();
-            String secondPlayer = threeMinQueue.poll();
-            String newGameId =  webClientBuilder.build()
-                    .post()
-                    .uri("http://game-service/api/game/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(NewGameRequest.builder()
-                            .firstPlayerUsername(firstPlayer)
-                            .secondPlayerUsername(secondPlayer)
-                            .build())
-                    .retrieve().bodyToMono(String.class).block();
-            queueService.startGame(newGameId);
-        }
+        addToQueue(queueEvent, threeMinQueue);
     }
 
     @KafkaListener(topics = "five-min-queue", groupId = "queue-id")
     public void setFiveMinQueue(QueueEvent queueEvent) {
-        fiveMinQueue.add(queueEvent.getUsername());
-        System.out.println(queueEvent.getUsername());
-        System.out.println(queueEvent.getEloRating());
-        if (fiveMinQueue.size() >= PLAYERS_REQUIRED) {
-            String firstPlayer = fiveMinQueue.poll();
-            String secondPlayer = fiveMinQueue.poll();
-            String newGameId =  webClientBuilder.build()
-                    .post()
-                    .uri("http://game-service/api/game/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(NewGameRequest.builder()
-                            .firstPlayerUsername(firstPlayer)
-                            .secondPlayerUsername(secondPlayer)
-                            .build())
-                    .retrieve().bodyToMono(String.class).block();
-            queueService.startGame(newGameId);
-        }
+        addToQueue(queueEvent, fiveMinQueue);
     }
     @KafkaListener(topics = "ten-min-queue", groupId = "queue-id")
     public void setTenMinQueue(QueueEvent queueEvent) {
-        tenMinQueue.add(queueEvent.getUsername());
-        if (tenMinQueue.size() >= PLAYERS_REQUIRED) {
-            String firstPlayer = tenMinQueue.poll();
-            String secondPlayer = tenMinQueue.poll();
-            String newGameId =  webClientBuilder.build()
-                    .post()
-                    .uri("http://game-service/api/game/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(NewGameRequest.builder()
-                            .firstPlayerUsername(firstPlayer)
-                            .secondPlayerUsername(secondPlayer)
-                            .build())
-                    .retrieve().bodyToMono(String.class).block();
-            queueService.startGame(newGameId);
-        }
+        addToQueue(queueEvent, tenMinQueue);
     }
+
     @KafkaListener(topics = "unLimited-queue", groupId = "queue-id")
     public void setUnlimitedQueue(QueueEvent queueEvent) {
-        unlimitedQueue.add(queueEvent.getUsername());
-        if (unlimitedQueue.size() >= PLAYERS_REQUIRED) {
-            String firstPlayer = unlimitedQueue.poll();
-            String secondPlayer = unlimitedQueue.poll();
-            String newGameId =  webClientBuilder.build()
-                    .post()
-                    .uri("http://game-service/api/game/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(NewGameRequest.builder()
-                            .firstPlayerUsername(firstPlayer)
-                            .secondPlayerUsername(secondPlayer)
-                            .build())
-                    .retrieve().bodyToMono(String.class).block();
-            queueService.startGame(newGameId);
+        addToQueue(queueEvent, unlimitedQueue);
+    }
+
+    private void addToQueue(QueueEvent queueEvent, Map<Double, List<String>> Queue) {
+        Double calculatedQueue = calculateQueue(queueEvent.getEloRating());
+        addUserToQueue(Queue, calculatedQueue, queueEvent.getUsername());
+        List<String> eloRatingQueue = Queue.get(calculatedQueue);
+
+        if (eloRatingQueue.size() >= PLAYERS_REQUIRED) {
+            String firstPlayer = removeLastPlayer(eloRatingQueue);
+            String secondPlayer = removeLastPlayer(eloRatingQueue);
+            creteGame(firstPlayer,secondPlayer);
         }
     }
+
+    private static void addUserToQueue(Map<Double, List<String>> map, Double key, String value) {
+        if (map.containsKey(key)) {
+            List<String> valuesList = map.get(key);
+            valuesList.add(value);
+        } else {
+            List<String> newList = new ArrayList<>(List.of(value));
+            map.put(key, newList);
+        }
+    }
+    private void creteGame(String firstPlayer,String secondPlayer){
+        String newGameId =  webClientBuilder.build()
+                .post()
+                .uri("http://game-service/api/game/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(NewGameRequest.builder()
+                        .firstPlayerUsername(firstPlayer)
+                        .secondPlayerUsername(secondPlayer)
+                        .build())
+                .retrieve().bodyToMono(String.class).block();
+        queueService.startGame(newGameId);
+    }
+
+    private String removeLastPlayer(List<String> queue) {
+        if (!queue.isEmpty()) {
+            return queue.remove(queue.size() - 1);
+        } else {
+            return null;
+        }
+    }
+    private Double calculateQueue(Double eloRating) {
+        Double queue = 0.0;
+        double lowerLimit = 0;
+        double upperLimit = 100;
+
+        while (!(lowerLimit <=eloRating) || !(eloRating <= upperLimit)){
+            lowerLimit+=100;
+            upperLimit+=100;
+            queue +=1;
+        }
+
+        return queue;
+    }
 }
+

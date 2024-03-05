@@ -2,6 +2,7 @@ package com.tpa.queueservice.service;
 
 import com.tpa.queueservice.dto.QueueRequest;
 import com.tpa.queueservice.event.QueueEvent;
+import com.tpa.queueservice.type.LogType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 @RequiredArgsConstructor
 public class QueueService {
     private CompletableFuture<String> gameStartFuture = new CompletableFuture<>();
+    private final LogService logService;
 
     private final KafkaTemplate<String, QueueEvent> kafkaTemplate;
 
@@ -30,9 +32,9 @@ public class QueueService {
             gameStartFuture = new CompletableFuture<>();
             return result;
         } catch (InterruptedException | ExecutionException e) {
-            // toDo
+            logService.send(LogType.ERROR,"todo");
+            return "toDo";
         }
-        return "to do";
     }
     public void startGame(String gameId) {
         gameStartFuture.complete(gameId);

@@ -9,8 +9,8 @@ spring:
         spring:
           json:
             type:
-              mapping:
-                event: com.tpa.queueservice.event.QueueEvent
+              mapping: event:com.tpa.queueservice.event.QueueEvent
+
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -18,9 +18,10 @@ spring:
         spring:
           json:
             type:
-              mapping:
-                event: com.tpa.useraccessservice.event.LogEvent
-                anotherEvent : com.tpa.queueservice.event.QueueEvent
+              mapping: event:com.tpa.queueservice.event.LogEvent
+
+
+
   application:
     name: queue-service
 

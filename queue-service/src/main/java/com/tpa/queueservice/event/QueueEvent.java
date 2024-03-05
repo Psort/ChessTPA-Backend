@@ -1,15 +1,12 @@
 package com.tpa.queueservice.event;
 
+import lombok.*;
 
-import com.tpa.queueservice.type.LogType;
-import lombok.Builder;
-import lombok.Getter;
-
-import java.time.ZonedDateTime;
-
-@Getter
 @Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class QueueEvent {
     private String username;
-    private     Double eloRating;
+    private Double eloRating;
 }
