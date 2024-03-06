@@ -83,15 +83,16 @@ public class PlayerConsumer {
 
     private String removeLastPlayer(List<String> queue) {
         if (!queue.isEmpty()) {
-            return queue.remove(queue.size() - 1);
+            return queue.remove(0);
         } else {
             return null;
         }
     }
+    //TO DO Better calculateElo
     private Double calculateQueue(Double eloRating) {
         Double queue = 0.0;
-        double lowerLimit = 0;
-        double upperLimit = 100;
+        int lowerLimit = 0;
+        int upperLimit = 100;
 
         while (!(lowerLimit <=eloRating) || !(eloRating <= upperLimit)){
             lowerLimit+=100;

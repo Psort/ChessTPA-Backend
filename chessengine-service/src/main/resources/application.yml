@@ -11,7 +11,7 @@ spring:
         spring:
           json:
             type:
-              mapping: event:com.tpa.useraccessservice.event.LogEvent
+              mapping: event:com.tpa.chessengine.event.LogEvent
 server:
   port: 8084
 
