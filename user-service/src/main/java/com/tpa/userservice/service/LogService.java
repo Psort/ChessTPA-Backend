@@ -17,7 +17,7 @@ public class LogService {
     private final KafkaTemplate<String, LogEvent> kafkaTemplate;
 
     public void send(LogType type, String message, Object... args) {
-        String serviceName = "AccessControl ";
+        String serviceName = "User ";
         String formattedMessage = String.format(message, args);
 
         kafkaTemplate.send(
