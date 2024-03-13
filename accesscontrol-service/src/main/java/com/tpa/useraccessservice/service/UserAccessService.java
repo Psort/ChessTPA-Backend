@@ -7,7 +7,6 @@ import com.tpa.useraccessservice.dto.SignUpRequest;
 import com.tpa.useraccessservice.dto.UserResponse;
 import com.tpa.useraccessservice.exception.AccessRequestException;
 import com.tpa.useraccessservice.exception.AccessServerException;
-import com.tpa.useraccessservice.type.LogType;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.ProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +30,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.util.Collections;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
@@ -74,12 +71,8 @@ public class UserAccessService {
      * creates new user in keycloack
      * @param request
      */
-//    @CircuitBreaker(name = "user-service", fallbackMethod = "fallbackRegister")
-//    @TimeLimiter(name = "user-service")
-//    @Retry(name = "user-service")
     @Transactional
     public Mono<UserResponse> registerUser(SignUpRequest request) {
-
         if(isKeycloakServerAvailable()) {
             return webClientService.sendToUserService(request)
                     .flatMap(response -> {
@@ -93,12 +86,12 @@ public class UserAccessService {
                             return Mono.error(new AccessServerException("Error during Keycloak operation", e));
                         }
 
-                        logService.send(LogType.INFO, "User {} registered successfully", response.getUsername());
+                        logService.sendError( "User {} registered successfully", response.getUsername());
                         return Mono.just(response);
                     })
                     .onErrorMap(throwable -> {
                         log.error("Error during registration", throwable);
-                        logService.send(LogType.ERROR, "Error during registration");
+                        logService.sendError("Error during registration");
                         return new AccessServerException(throwable.getMessage());
                     });
         } else throw new AccessServerException("KEYCLOAK IS DEAD");
@@ -171,14 +164,5 @@ public class UserAccessService {
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
         return kcUser;
-    }
-    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, RuntimeException e) {
-        logService.sendError("There was a problem during user registry, cannot find user-service instance.");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
-    }
-
-    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, TimeoutException e) {
-        logService.sendError("There was a problem during user registry, user-service did not respond on time.");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 }
