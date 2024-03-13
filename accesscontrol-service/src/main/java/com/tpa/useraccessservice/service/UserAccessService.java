@@ -76,16 +76,7 @@ public class UserAccessService {
         if(isKeycloakServerAvailable()) {
             return webClientService.sendToUserService(request)
                     .flatMap(response -> {
-                        try {
-                            connectWithKeycloak(request);
-                        } catch (ConnectException e) {
-                            log.error("Connection to Keycloak failed", e);
-                            return Mono.error(new AccessServerException("Connect to Keycloak failed", e));
-                        } catch (ProcessingException e) {
-                            log.error("Error during Keycloak operation", e);
-                            return Mono.error(new AccessServerException("Error during Keycloak operation", e));
-                        }
-
+                        connectWithKeycloak(request);
                         logService.sendError( "User {} registered successfully", response.getUsername());
                         return Mono.just(response);
                     })
@@ -95,19 +86,21 @@ public class UserAccessService {
                         return new AccessServerException(throwable.getMessage());
                     });
         } else throw new AccessServerException("KEYCLOAK IS DEAD");
+
     }
     public boolean isKeycloakServerAvailable() {
         String keycloakServerHost = "localhost";
         int keycloakServerPort = 8181;
 
-        try (Socket socket = new Socket(keycloakServerHost, keycloakServerPort)) {
+        try (Socket ignored = new Socket(keycloakServerHost, keycloakServerPort)) {
             return true;
 
         } catch (IOException e) {
+            logService.sendError("Keycloak server is not available");
             return false;
         }
     }
-    private void connectWithKeycloak(SignUpRequest request) throws ConnectException {
+    private void connectWithKeycloak(SignUpRequest request) {
         UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
         UserRepresentation kcUser = createKeycloakUser(request);
         usersResource.create(kcUser);

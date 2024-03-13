@@ -33,14 +33,14 @@ public class WebClientService {
                 .onStatus(
                         status -> status == HttpStatus.SERVICE_UNAVAILABLE,
                         clientResponse -> {
-                            logService.send(LogType.ERROR, "User service is currently unavailable");
+                            logService.sendError("User service is currently unavailable");
                             return Mono.error(new AccessServerException("User service is currently unavailable"));
                         }
                 )
                 .onStatus(
                         HttpStatusCode::isError,
                         clientResponse -> {
-                            logService.send(LogType.ERROR, "User service returned an unexpected error");
+                            logService.sendError("User service returned an unexpected error");
                             return Mono.error(new AccessServerException("User service returned an unexpected error"));
                         }
                 )
