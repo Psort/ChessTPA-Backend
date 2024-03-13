@@ -24,6 +24,7 @@ public class UserService {
     @Transactional
     public UserResponse createUser(SignUpRequest request) {
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                logService.send(LogType.ERROR, "User with email {} already exist", request.getEmail());
                 throw new UserRequestException("User already exists");
             }
 
