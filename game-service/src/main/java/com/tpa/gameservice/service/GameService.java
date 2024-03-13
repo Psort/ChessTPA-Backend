@@ -149,7 +149,7 @@ public class GameService {
                 .build();
     }
     private String fallback(NewGameRequest request, RuntimeException e) {
-        logService.send(LogType.ERROR, "Error while creating a game");
+        logService.sendError( "Error while creating a game");
         return "Can not create game right now, please try again later";
     }
 

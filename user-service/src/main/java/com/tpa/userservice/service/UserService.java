@@ -32,7 +32,7 @@ public class UserService {
             userRepository.save(user);
 
             log.info("User with email {} added", request.getEmail());
-            logService.send(LogType.INFO, "User with email {} added", request.getEmail());
+            logService.sendInfo( "User with email {} added", request.getEmail());
 
             return buildUserResponse(user);
     }
