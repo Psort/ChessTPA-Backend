@@ -1,38 +1,42 @@
 package com.tpa.useraccessservice.service;
 
-import com.tpa.useraccessservice.exception.AccessRequestException;
-import com.tpa.useraccessservice.exception.AccessServerException;
-import com.tpa.useraccessservice.type.LogType;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
-import jakarta.ws.rs.NotAuthorizedException;
-import jakarta.ws.rs.ProcessingException;
-import lombok.RequiredArgsConstructor;
-import org.keycloak.OAuth2Constants;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import com.tpa.useraccessservice.config.KeycloakProvider;
 import com.tpa.useraccessservice.dto.LoginRequest;
 import com.tpa.useraccessservice.dto.RefreshTokenRequest;
 import com.tpa.useraccessservice.dto.SignUpRequest;
+import com.tpa.useraccessservice.dto.UserResponse;
+import com.tpa.useraccessservice.exception.AccessRequestException;
+import com.tpa.useraccessservice.exception.AccessServerException;
+import com.tpa.useraccessservice.type.LogType;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.ProcessingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.keycloak.admin.client.Keycloak;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.Socket;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserAccessService {
     
     @Value("${keycloak.realm}")
@@ -70,28 +74,51 @@ public class UserAccessService {
      * creates new user in keycloack
      * @param request
      */
-    @CircuitBreaker(name = "user-service", fallbackMethod = "fallbackRegister")
-    @TimeLimiter(name = "user-service")
-    @Retry(name = "user-service")
+//    @CircuitBreaker(name = "user-service", fallbackMethod = "fallbackRegister")
+//    @TimeLimiter(name = "user-service")
+//    @Retry(name = "user-service")
     @Transactional
-    public CompletableFuture<String> registerUser(SignUpRequest request){
-        try {
-            UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
-            UserRepresentation kcUser = createKeycloakUser(request);
-            usersResource.create(kcUser);
-            webClientService.sendToUserService(request);
-            logService.send(LogType.INFO, "User {} registered successfully", kcUser.getUsername());
-            return CompletableFuture.completedFuture("User registered successfully");
+    public Mono<UserResponse> registerUser(SignUpRequest request) {
 
-        } catch (ProcessingException e) {
-            logService.send(LogType.ERROR, "Error during user registry, keycloak server is shut down");
-            throw new AccessServerException("Server problem, please try again later");
+        if(isKeycloakServerAvailable()) {
+            return webClientService.sendToUserService(request)
+                    .flatMap(response -> {
+                        try {
+                            connectWithKeycloak(request);
+                        } catch (ConnectException e) {
+                            log.error("Connection to Keycloak failed", e);
+                            return Mono.error(new AccessServerException("Connect to Keycloak failed", e));
+                        } catch (ProcessingException e) {
+                            log.error("Error during Keycloak operation", e);
+                            return Mono.error(new AccessServerException("Error during Keycloak operation", e));
+                        }
 
-        } catch (AccessRequestException e) {
-            return CompletableFuture.completedFuture(e.getMessage());
+                        logService.send(LogType.INFO, "User {} registered successfully", response.getUsername());
+                        return Mono.just(response);
+                    })
+                    .onErrorMap(throwable -> {
+                        log.error("Error during registration", throwable);
+                        logService.send(LogType.ERROR, "Error during registration");
+                        return new AccessServerException(throwable.getMessage());
+                    });
+        } else throw new AccessServerException("KEYCLOAK IS DEAD");
+    }
+    public boolean isKeycloakServerAvailable() {
+        String keycloakServerHost = "localhost";
+        int keycloakServerPort = 8181;
+
+        try (Socket socket = new Socket(keycloakServerHost, keycloakServerPort)) {
+            return true;
+
+        } catch (IOException e) {
+            return false;
         }
     }
-
+    private void connectWithKeycloak(SignUpRequest request) throws ConnectException {
+        UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
+        UserRepresentation kcUser = createKeycloakUser(request);
+        usersResource.create(kcUser);
+    }
     /**
      * get new access token from keycloak using refresh token
      * @param refreshTokenRequest
