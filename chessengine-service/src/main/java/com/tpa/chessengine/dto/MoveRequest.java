@@ -1,10 +1,11 @@
 package com.tpa.chessengine.dto;
 
+import com.chesstpa.pieces.PieceColor;
 import lombok.Getter;
 
 @Getter
 public class MoveRequest {
     private String boardState;
-    private String piecePosition;
+    private PieceColor playerColor;
     private String[] castles;
 }

@@ -32,7 +32,7 @@ public class QueueService {
             gameStartFuture = new CompletableFuture<>();
             return result;
         } catch (InterruptedException | ExecutionException e) {
-            logService.send(LogType.ERROR,"todo");
+            logService.sendError("todo");
             return "toDo";
         }
     }

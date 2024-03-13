@@ -28,8 +28,6 @@ public class ChessEngineController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<GameStatusResponse> getGameStatus(@RequestBody GameStatusRequest request ){
         GameStatusResponse gameStatusResponse = chessEngineService.getGameStatus(request);
-        System.out.print("2:");
-        System.out.println(gameStatusResponse);
         return ResponseEntity.ok(gameStatusResponse);
     }
 }

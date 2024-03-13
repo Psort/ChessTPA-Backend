@@ -61,11 +61,11 @@ public class UserAccessService {
             return keycloak.tokenManager().getAccessToken();
 
         } catch (ProcessingException e) {
-            logService.send(LogType.ERROR, "Error during user login, keycloak server is shut down");
+            logService.sendError( "Error during user login, keycloak server is shut down");
             throw new AccessServerException("Server problem, please try again later");
 
         }  catch (NotAuthorizedException e) {
-            logService.send(LogType.ERROR, "Invalid username or password, please try again");
+            logService.sendError( "Invalid username or password, please try again");
             throw new AccessRequestException("Invalid username or password, please try again");
         }
     }
@@ -173,12 +173,12 @@ public class UserAccessService {
         return kcUser;
     }
     private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, RuntimeException e) {
-        logService.send(LogType.ERROR,"There was a problem during user registry, cannot find user-service instance.");
+        logService.sendError("There was a problem during user registry, cannot find user-service instance.");
         return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 
     private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, TimeoutException e) {
-        logService.send(LogType.ERROR,"There was a problem during user registry, user-service did not respond on time.");
+        logService.sendError("There was a problem during user registry, user-service did not respond on time.");
         return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 }
