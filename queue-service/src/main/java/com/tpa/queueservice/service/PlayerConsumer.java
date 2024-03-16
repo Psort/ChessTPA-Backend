@@ -2,6 +2,7 @@ package com.tpa.queueservice.service;
 
 import com.tpa.queueservice.dto.NewGameRequest;
 import com.tpa.queueservice.event.QueueEvent;
+import com.tpa.queueservice.type.GameType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -55,7 +56,7 @@ public class PlayerConsumer {
         if (eloRatingQueue.size() >= PLAYERS_REQUIRED) {
             String firstPlayer = removeLastPlayer(eloRatingQueue);
             String secondPlayer = removeLastPlayer(eloRatingQueue);
-            creteGame(firstPlayer,secondPlayer);
+            creteGame(firstPlayer,secondPlayer, queueEvent.getGameType());
         }
     }
 
@@ -68,7 +69,7 @@ public class PlayerConsumer {
             map.put(key, newList);
         }
     }
-    private void creteGame(String firstPlayer,String secondPlayer){
+    private void creteGame(String firstPlayer, String secondPlayer, GameType gameType){
         String newGameId =  webClientBuilder.build()
                 .post()
                 .uri("http://game-service/api/game/create")
@@ -76,6 +77,7 @@ public class PlayerConsumer {
                 .bodyValue(NewGameRequest.builder()
                         .firstPlayerUsername(firstPlayer)
                         .secondPlayerUsername(secondPlayer)
+                        .gameType(gameType)
                         .build())
                 .retrieve().bodyToMono(String.class).block();
         queueService.startGame(newGameId);
