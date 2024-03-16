@@ -8,7 +8,6 @@ import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
-import com.tpa.gameservice.type.LogType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ public class GameService {
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
 
-        Game game = createDefaulttdGame( firstPlayer,secondPlayer);
+        Game game = createDefaultGame(firstPlayer, secondPlayer, newGameRequest);
 
         gameRepository.save(game);
 
@@ -128,7 +127,7 @@ public class GameService {
         return castleTypes;
     }
 
-    private Game createDefaulttdGame(Player firstPlayer,Player secondPlayer){
+    private Game createDefaultGame(Player firstPlayer, Player secondPlayer, NewGameRequest request){
         List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
                 CastleType.SHORTWHITE.getValue(),
                 CastleType.LONGBLACK.getValue(),
@@ -136,10 +135,14 @@ public class GameService {
 
         String defaultBoardState = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
+        int timeInSeconds = request.getGameType().getMinutes() * 60;
+
         GameState defaultGameState = GameState.builder()
                 .boardState(defaultBoardState)
                 .status(GameStatus.GAME)
                 .castleTypes(defaultCastleTypes)
+                .whitePlayerTimeLeft(timeInSeconds)
+                .blackPlayerTimeLeft(timeInSeconds)
                 .build();
 
         return Game.builder()

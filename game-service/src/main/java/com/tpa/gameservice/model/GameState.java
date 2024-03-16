@@ -13,7 +13,8 @@ public class GameState {
     Move move;
     String boardState;
     List<String> castleTypes;
-
+    Integer whitePlayerTimeLeft;
+    Integer blackPlayerTimeLeft;
     @Override
     public boolean equals(Object that) {
         if (this == that) return true;
