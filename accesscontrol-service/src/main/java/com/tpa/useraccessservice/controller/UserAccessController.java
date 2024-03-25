@@ -1,5 +1,7 @@
 package com.tpa.useraccessservice.controller;
 
+import com.tpa.useraccessservice.dto.UserResponse;
+import com.tpa.useraccessservice.exception.AccessRequestException;
 import com.tpa.useraccessservice.service.LogService;
 import com.tpa.useraccessservice.service.UserAccessService;
 import com.tpa.useraccessservice.type.LogType;
@@ -13,6 +15,7 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -30,8 +33,9 @@ public class UserAccessController {
     }
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public CompletableFuture<String> register(@RequestBody SignUpRequest signUpRequest){
-        return userAccessService.registerUser(signUpRequest);
+    public ResponseEntity<Mono<UserResponse>> registerUser(@RequestBody SignUpRequest request) {
+        Mono<UserResponse> responseMono = userAccessService.registerUser(request);
+        return ResponseEntity.ok().body(responseMono);
     }
     @PostMapping("/refresh")
     @ResponseStatus(HttpStatus.OK)

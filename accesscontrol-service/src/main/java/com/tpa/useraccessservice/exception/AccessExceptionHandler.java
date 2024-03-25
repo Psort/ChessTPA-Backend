@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 @ControllerAdvice
 public class AccessExceptionHandler {
     @ExceptionHandler(value = {AccessRequestException.class})
-    public ResponseEntity<Object> handeUserRequestException(AccessRequestException e) {
+    public ResponseEntity<Object> handleAccessRequestException(AccessRequestException e) {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
 
         AccessException accessException =  new AccessException(
@@ -24,9 +24,8 @@ public class AccessExceptionHandler {
     }
 
     @ExceptionHandler(value = {AccessServerException.class})
-    public ResponseEntity<Object> handeUserRequestException(AccessServerException e) {
+    public ResponseEntity<Object> handleAccessServerException(AccessServerException e) {
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-
         AccessException accessException =  new AccessException(
                 e.getMessage(),
                 httpStatus,
@@ -35,4 +34,5 @@ public class AccessExceptionHandler {
 
         return new ResponseEntity<>(accessException, httpStatus);
     }
+
 }

@@ -20,6 +20,8 @@ public class GameState {
     int fullMovesCounter;
     String enPassantPosition;
 
+    Integer whitePlayerTimeLeft;
+    Integer blackPlayerTimeLeft;
     @Override
     public boolean equals(Object that) {
         if (this == that) return true;

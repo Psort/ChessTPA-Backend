@@ -1,38 +1,39 @@
 package com.tpa.useraccessservice.service;
 
-import com.tpa.useraccessservice.exception.AccessRequestException;
-import com.tpa.useraccessservice.exception.AccessServerException;
-import com.tpa.useraccessservice.type.LogType;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
-import jakarta.ws.rs.NotAuthorizedException;
-import jakarta.ws.rs.ProcessingException;
-import lombok.RequiredArgsConstructor;
-import org.keycloak.OAuth2Constants;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import com.tpa.useraccessservice.config.KeycloakProvider;
 import com.tpa.useraccessservice.dto.LoginRequest;
 import com.tpa.useraccessservice.dto.RefreshTokenRequest;
 import com.tpa.useraccessservice.dto.SignUpRequest;
+import com.tpa.useraccessservice.dto.UserResponse;
+import com.tpa.useraccessservice.exception.AccessRequestException;
+import com.tpa.useraccessservice.exception.AccessServerException;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.ProcessingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.keycloak.admin.client.Keycloak;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.Socket;
 import java.util.Collections;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserAccessService {
     
     @Value("${keycloak.realm}")
@@ -70,28 +71,40 @@ public class UserAccessService {
      * creates new user in keycloack
      * @param request
      */
-    @CircuitBreaker(name = "user-service", fallbackMethod = "fallbackRegister")
-    @TimeLimiter(name = "user-service")
-    @Retry(name = "user-service")
     @Transactional
-    public CompletableFuture<String> registerUser(SignUpRequest request){
-        try {
-            UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
-            UserRepresentation kcUser = createKeycloakUser(request);
-            usersResource.create(kcUser);
-            webClientService.sendToUserService(request);
-            logService.sendInfo( "User {} registered successfully", kcUser.getUsername());
-            return CompletableFuture.completedFuture("User registered successfully");
+    public Mono<UserResponse> registerUser(SignUpRequest request) {
+        if(isKeycloakServerAvailable()) {
+            return webClientService.sendToUserService(request)
+                    .flatMap(response -> {
+                        connectWithKeycloak(request);
+                        logService.sendError( "User {} registered successfully", response.getUsername());
+                        return Mono.just(response);
+                    })
+                    .onErrorMap(throwable -> {
+                        log.error("Error during registration", throwable);
+                        logService.sendError("Error during registration");
+                        return new AccessServerException(throwable.getMessage());
+                    });
+        } else throw new AccessServerException("KEYCLOAK IS DEAD");
 
-        } catch (ProcessingException e) {
-            logService.sendError("Error during user registry, keycloak server is shut down");
-            throw new AccessServerException("Server problem, please try again later");
+    }
+    public boolean isKeycloakServerAvailable() {
+        String keycloakServerHost = "localhost";
+        int keycloakServerPort = 8181;
 
-        } catch (AccessRequestException e) {
-            return CompletableFuture.completedFuture(e.getMessage());
+        try (Socket ignored = new Socket(keycloakServerHost, keycloakServerPort)) {
+            return true;
+
+        } catch (IOException e) {
+            logService.sendError("Keycloak server is not available");
+            return false;
         }
     }
-
+    private void connectWithKeycloak(SignUpRequest request) {
+        UsersResource usersResource = keycloakProvider.getInstance().realm(realm).users();
+        UserRepresentation kcUser = createKeycloakUser(request);
+        usersResource.create(kcUser);
+    }
     /**
      * get new access token from keycloak using refresh token
      * @param refreshTokenRequest
@@ -144,14 +157,5 @@ public class UserAccessService {
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
         return kcUser;
-    }
-    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, RuntimeException e) {
-        logService.sendError("There was a problem during user registry, cannot find user-service instance.");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
-    }
-
-    private CompletableFuture<String> fallbackRegister(SignUpRequest signUpRequest, TimeoutException e) {
-        logService.sendError("There was a problem during user registry, user-service did not respond on time.");
-        return CompletableFuture.supplyAsync(() -> "Oops something went wrong, try to register later");
     }
 }
