@@ -6,16 +6,16 @@ import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
 import com.tpa.gameservice.service.GameService;
 import com.tpa.gameservice.service.WebClientService;
+import com.tpa.gameservice.type.CastleType;
+import com.tpa.gameservice.type.GameStatus;
+import com.tpa.gameservice.type.PlayerColor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 

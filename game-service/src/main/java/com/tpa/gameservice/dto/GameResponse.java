@@ -1,6 +1,8 @@
 package com.tpa.gameservice.dto;
 
 import com.tpa.gameservice.model.*;
+import com.tpa.gameservice.type.GameType;
+import com.tpa.gameservice.type.PlayerColor;
 import lombok.Builder;
 import lombok.Getter;
 

@@ -1,5 +1,7 @@
 package com.tpa.gameservice.model;
 
+import com.tpa.gameservice.type.GameType;
+import com.tpa.gameservice.type.PlayerColor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +10,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.List;
 
 @Document(value = "game")

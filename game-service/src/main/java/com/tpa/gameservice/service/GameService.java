@@ -1,14 +1,22 @@
 package com.tpa.gameservice.service;
 
 
+import com.chesstpa.board.Board;
+import com.chesstpa.board.Position;
+import com.chesstpa.board.Spot;
+import com.chesstpa.communication.ChessEngine;
+import com.chesstpa.pieces.PieceColor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpa.gameservice.dto.GameResponse;
+import com.tpa.gameservice.dto.MoveRequest;
 import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
-import com.tpa.gameservice.type.LogType;
+import com.tpa.gameservice.type.CastleType;
+import com.tpa.gameservice.type.GameStatus;
+import com.tpa.gameservice.type.PlayerColor;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -23,6 +32,7 @@ public class GameService {
     private final LogService logService;
     private final WebClientService webClientService;
     private final GameRepository gameRepository;
+    private final ChessEngine chessEngine;
 
     @Transactional
     @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
@@ -70,18 +80,18 @@ public class GameService {
 
     public void safeGameState(SafeGameStateRequest safeGameStateRequest) {
         Optional<Game> optionalGame = gameRepository.findById(safeGameStateRequest.getGameId());
-
         if (optionalGame.isPresent()) {
             Game game = optionalGame.get();
-
+            PlayerColor opponentColor  = game.getActualColor() == PlayerColor.WHITE ? PlayerColor.BLACK :PlayerColor.WHITE;
             GameState gameState = GameState.builder()
                     .boardState(safeGameStateRequest.getBoardState())
-                    .status( GameStatus.getGameStatusByValue(safeGameStateRequest.getGameStatus()))
+                    .status( safeGameStateRequest.getGameStatus())
                     .move(safeGameStateRequest.getMove())
-                    .castleTypes(
-                            calculateCastle(
-                                    game.getHistory().get(game.getHistory().size()-1).getCastleTypes()
-                                    ,safeGameStateRequest.getMove().getStartingCoordinates()))
+                    .castleTypes(safeGameStateRequest.getCastleTypes())
+                    .possibleMoves(getPossiblesMoves(safeGameStateRequest.getBoardState(),opponentColor, safeGameStateRequest.getCastleTypes()))
+                    .fullMovesCounter(safeGameStateRequest.getFullMovesCounter())
+                    .halfMovesCounter(safeGameStateRequest.getHalfMovesCounter())
+                    .enPassantPosition(safeGameStateRequest.getEnPassantPosition())
                     .build();
 
             PlayerColor actualColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
@@ -106,6 +116,79 @@ public class GameService {
         return null;
     }
 
+    public void updateGameState(MoveRequest moveRequest) {
+        Optional<Game> optionalGame = gameRepository.findById(moveRequest.getGameId());
+        if (optionalGame.isPresent()){
+            Game game = optionalGame.get();
+            GameState gameState = game.getHistory().get(game.getHistory().size()-1);
+            List<String> castletypes = game.getHistory().get(game.getHistory().size()-1).getCastleTypes();
+            if (IsValidMove(gameState.getPossibleMoves(),moveRequest.getMove())){
+                String updatedBoardState = updateBoardState(gameState.getBoardState(),moveRequest.getMove());
+                List<String> updatedCastleType = calculateCastle(castletypes,moveRequest.getMove().getStartingCoordinates());
+                safeGameState(SafeGameStateRequest.builder()
+                        .gameId(moveRequest.getGameId())
+                        .gameStatus(convertStatus(getGameStatus(updatedBoardState,gameState.getCastleTypes(),game.getActualColor().toString())))
+                        .move(moveRequest.getMove())
+                        .castleTypes(updatedCastleType)
+                        .boardState(updatedBoardState)
+                        .enPassantPosition( "todo")
+                        .halfMovesCounter(calculateHalfMoves(gameState.getHalfMovesCounter()))
+                        .fullMovesCounter(gameState.getFullMovesCounter()+1)
+                        .build());
+            }
+        }
+    }
+
+    private int calculateHalfMoves(int halfMovesCounter) {
+        return halfMovesCounter+1;
+    }
+
+    private String updateBoardState(String boardState, Move move) {
+        Board board = new Board();
+        board.setBoardState(boardState,"");
+        Spot[][] spots = board.getSpots();
+        Position startPosition = convertCoordinatestoPosition(move.getStartingCoordinates());
+        Position endPosition = convertCoordinatestoPosition(move.getEndingCoordinates());
+        Spot spot = spots[startPosition.getX()][startPosition.getY()];
+        spots[endPosition.getX()][endPosition.getY()].setPiece(spot.getPiece());
+        spot.setPiece(null);
+        return board.spotsToBoardState();
+    }
+
+    private boolean IsValidMove(Set<PossibleMove> possibleMoves, Move move) {
+        Position startPosition = convertCoordinatestoPosition(move.getStartingCoordinates());
+        Position endPosition = convertCoordinatestoPosition(move.getEndingCoordinates());
+        return possibleMoves.stream()
+                .anyMatch(possibleMove ->
+                        possibleMove.piecePosition().getX() == startPosition.getX() && possibleMove.piecePosition().getY() == startPosition.getY()
+                                &&
+                                possibleMove.possibleMovesForPiece().stream()
+                                        .anyMatch(position ->
+                                                position.getX() == endPosition.getX() && position.getY() == endPosition.getY()));
+
+    }
+
+
+    private   Position convertCoordinatestoPosition(String coordinates) {
+        int x = Integer.parseInt(coordinates.substring(1)) - 1;
+        int y = coordinates.toUpperCase().charAt(0) - 'A'; // Przyjmując, że pozycje są w formie "A1", "B2", itp.
+        return new Position(x,y);
+    }
+
+    private Set<PossibleMove> getPossiblesMoves( String boardState, PlayerColor playerColor, List<String> castles) {
+        String convertedCastlesToString = convertCastlesToString(castles);
+        Map<Position, List<Position>> allPossiblePosition = chessEngine.getAllPossibleMovesForColor(boardState,playerColor.name(),convertedCastlesToString);
+        return  allPossiblePosition.entrySet().stream()
+                .map(entry -> new PossibleMove(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toSet());
+    }
+    private String getGameStatus(String boardState,List<String> castles,String playerColor) {
+        String convertCastles = convertCastlesToString(castles);
+//        System.out.println(boardState);
+//        System.out.println(castles);
+//        System.out.println(playerColor);
+        return chessEngine.getGameStatus(boardState, convertCastles, playerColor);
+    }
     private String convertToGameResponseAsJson(GameResponse gameResponse) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -127,19 +210,22 @@ public class GameService {
         }
         return castleTypes;
     }
-
     private Game createDefaulttdGame(Player firstPlayer,Player secondPlayer){
+        int defaultMovesValue = 0;
+        String defaultBoardState = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         List<String> defaultCastleTypes = List.of(CastleType.LONGWHITE.getValue(),
                 CastleType.SHORTWHITE.getValue(),
                 CastleType.LONGBLACK.getValue(),
                 CastleType.SHORTBLACK.getValue());
 
-        String defaultBoardState = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-
         GameState defaultGameState = GameState.builder()
                 .boardState(defaultBoardState)
                 .status(GameStatus.GAME)
+                .possibleMoves(getPossiblesMoves(defaultBoardState,PlayerColor.WHITE,defaultCastleTypes))
                 .castleTypes(defaultCastleTypes)
+                .halfMovesCounter(defaultMovesValue)
+                .fullMovesCounter(defaultMovesValue)
+                .enPassantPosition("")
                 .build();
 
         return Game.builder()
@@ -148,9 +234,19 @@ public class GameService {
                 .actualColor(PlayerColor.WHITE)
                 .build();
     }
+    private String convertCastlesToString(List<String> castles){
+        return String.join("", castles);
+    }
+
+    private GameStatus convertStatus(String status){
+        return Objects.equals(status, "Checkmate") ? GameStatus.CHECKMATE :
+                Objects.equals(status, "Pat") ? GameStatus.PAT :
+                        GameStatus.GAME;
+
+    }
+
     private String fallback(NewGameRequest request, RuntimeException e) {
         logService.sendError( "Error while creating a game");
         return "Can not create game right now, please try again later";
     }
-
 }

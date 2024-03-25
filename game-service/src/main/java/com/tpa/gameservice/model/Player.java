@@ -1,5 +1,6 @@
 package com.tpa.gameservice.model;
 
+import com.tpa.gameservice.type.PlayerColor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.tpa.chessengine.config;
+package com.tpa.gameservice.config;
 
 import com.chesstpa.communication.ChessEngine;
 import org.springframework.context.annotation.Bean;

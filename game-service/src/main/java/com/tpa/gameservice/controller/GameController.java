@@ -2,10 +2,12 @@ package com.tpa.gameservice.controller;
 
 
 import com.tpa.gameservice.dto.GameResponse;
+import com.tpa.gameservice.dto.MoveRequest;
 import com.tpa.gameservice.dto.NewGameRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.Game;
 import com.tpa.gameservice.service.GameService;
+import jakarta.ws.rs.POST;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,11 @@ public class GameController {
     public ResponseEntity<String> createGame(@RequestBody NewGameRequest newGameRequest){
         Game game = gameService.createGame(newGameRequest);
         return ResponseEntity.ok(game.getId());
+    }
+    @PatchMapping("/update")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateGameState(@RequestBody MoveRequest moveRequest){
+        gameService.updateGameState(moveRequest);
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)

@@ -1,4 +1,4 @@
-package com.tpa.gameservice.model;
+package com.tpa.gameservice.type;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
