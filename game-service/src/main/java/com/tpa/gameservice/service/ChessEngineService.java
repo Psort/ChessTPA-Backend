@@ -121,7 +121,7 @@ public class ChessEngineService {
         boolean startMove = ((startPosition.getX() == 1 && endPosition.getX() == 3)|| (startPosition.getX() == 6 && endPosition.getX() == 4));
         if (spotPiece != null && spotPiece.getPiece().getSimpleName() == 'p' && startMove) {
             int enPassantX = (spotPiece.getPiece().getColor() == PieceColor.BLACK) ? endPosition.getX() - 1 : endPosition.getX() + 1;
-            return convertPositionToString(endPosition.getY(), enPassantX);
+            return convertPositionToString( enPassantX,endPosition.getY());
         }
         return "";
     }
@@ -147,8 +147,8 @@ public class ChessEngineService {
         return halfMovesCounter+1;
     }//Todo----------------------------------------------------------------------
     public String convertPositionToString(int x, int y) {
-        char letter = (char) ('a' + x);
-        int number = y + 1;
+        int number = x + 1;
+        char letter = (char) ('a' + y);
         return String.valueOf(letter) + number;
     }
 }
