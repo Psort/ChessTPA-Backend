@@ -44,11 +44,6 @@ public class GameController {
         List<GameResponse> gameResponse = gameService.getAllGamesForUser(username);
         return ResponseEntity.ok(gameResponse);
     }
-    @PatchMapping
-    @ResponseStatus(HttpStatus.OK)
-    public void safeGameStatus(@RequestBody SafeGameStateRequest safeGameStatusRequest){
-        gameService.safeGameState(safeGameStatusRequest);
-    }
     @GetMapping("/json")
     @ResponseStatus(HttpStatus.OK)
     public String getGameAsJson(@RequestParam String gameId){
