@@ -97,10 +97,10 @@ public class ChessEngineService {
             List<String> castleTypes = game.getHistory().get(game.getHistory().size()-1).getCastleTypes();
             List<String> updatedCastleType = calculateCastle(castleTypes, moveRequest.getMove().getStartingCoordinates());
             String updatedBoardState = updateBoardState(gameState.getBoardState(),gameState.getEnPassantPosition(), moveRequest.getMove());
-
+            PlayerColor actualColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
             return SafeGameStateRequest.builder()
                     .gameId(moveRequest.getGameId())
-                    .gameStatus(convertStatus(getGameStatus(updatedBoardState,gameState.getCastleTypes(),gameState.getEnPassantPosition(), game.getActualColor().toString())))
+                    .gameStatus(convertStatus(getGameStatus(updatedBoardState,gameState.getCastleTypes(),gameState.getEnPassantPosition(), actualColor.toString())))
                     .move(moveRequest.getMove())
                     .castleTypes(updatedCastleType)
                     .boardState(updatedBoardState)
