@@ -1,6 +1,7 @@
 package com.tpa.queueservice.service;
 
 import com.tpa.queueservice.dto.NewGameRequest;
+import com.tpa.queueservice.dto.QueueRequest;
 import com.tpa.queueservice.event.QueueEvent;
 import com.tpa.queueservice.type.GameType;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,6 @@ public class PlayerConsumer {
     private Map<Double, List<String>> fiveMinQueue = new HashMap<>();
     private Map<Double, List<String>> tenMinQueue = new HashMap<>();
     private Map<Double, List<String>> unlimitedQueue = new HashMap<>();
-
-
     private final QueueService queueService;
 
     @KafkaListener(topics = "one-min-queue", groupId = "queue-id")
@@ -48,6 +47,18 @@ public class PlayerConsumer {
         addToQueue(queueEvent, unlimitedQueue);
     }
 
+    public void leaveQueue(QueueRequest queueRequest) {
+        Double convertedElo = calculateQueue(queueRequest.getEloRating());
+        List<String> username = List.of(queueRequest.getUsername());
+
+        switch (queueRequest.getQueueType()) {
+            case ONEMINQUEUE -> oneMinQueue.remove(convertedElo, username);
+            case THREEMINQUEUE -> threeMinQueue.remove(convertedElo, username);
+            case FIVEMINQUEUE -> fiveMinQueue.remove(convertedElo, username);
+            case TENMINQUEUE -> tenMinQueue.remove(convertedElo, username);
+            case UNLIMITEDQUEUE -> unlimitedQueue.remove(convertedElo, username);
+        }
+    }
     private void addToQueue(QueueEvent queueEvent, Map<Double, List<String>> Queue) {
         Double calculatedQueue = calculateQueue(queueEvent.getEloRating());
         addUserToQueue(Queue, calculatedQueue, queueEvent.getUsername());
@@ -59,7 +70,6 @@ public class PlayerConsumer {
             creteGame(firstPlayer,secondPlayer, queueEvent.getGameType());
         }
     }
-
     private static void addUserToQueue(Map<Double, List<String>> map, Double key, String value) {
         if (map.containsKey(key)) {
             List<String> valuesList = map.get(key);
@@ -91,6 +101,7 @@ public class PlayerConsumer {
         }
     }
     //TO DO Better calculateElo
+    // konwertuje elo na liczbe np -> 7.0 to przedzial (800 - 900)
     private Double calculateQueue(Double eloRating) {
         Double queue = 0.0;
         int lowerLimit = 0;
@@ -104,5 +115,6 @@ public class PlayerConsumer {
 
         return queue;
     }
+
 }
 

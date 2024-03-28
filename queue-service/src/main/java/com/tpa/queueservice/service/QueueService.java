@@ -19,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 public class QueueService {
     private CompletableFuture<String> gameStartFuture = new CompletableFuture<>();
     private final LogService logService;
-
     private final KafkaTemplate<String, QueueEvent> kafkaTemplate;
 
     public String addToQueue(QueueRequest queueRequest){
