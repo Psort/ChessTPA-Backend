@@ -1,11 +1,6 @@
 package com.tpa.gameservice.service;
 
 
-import com.chesstpa.board.Board;
-import com.chesstpa.board.Position;
-import com.chesstpa.board.Spot;
-import com.chesstpa.communication.ChessEngine;
-import com.chesstpa.pieces.PieceColor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpa.gameservice.dto.GameResponse;
@@ -16,6 +11,7 @@ import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
 import com.tpa.gameservice.type.CastleType;
 import com.tpa.gameservice.type.GameStatus;
+import com.tpa.gameservice.type.GameType;
 import com.tpa.gameservice.type.PlayerColor;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
@@ -41,7 +37,7 @@ public class GameService {
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
 
-        Game game = createDefaulttdGame( firstPlayer,secondPlayer);
+        Game game = createDefaultGame(firstPlayer, secondPlayer, newGameRequest.getGameType());
 
         gameRepository.save(game);
 
@@ -126,12 +122,16 @@ public class GameService {
             return null;
         }
     }
-    private Game createDefaulttdGame(Player firstPlayer,Player secondPlayer){
+    private Game createDefaultGame(Player firstPlayer, Player secondPlayer, GameType gameType) {
+        Double defaultTimeInSeconds = (double) (gameType.getMinutes() * 60);
+
         GameState defaultGameState = createDefaulGameState();
         return Game.builder()
                 .players(new Player[]{firstPlayer, secondPlayer})
                 .history(List.of(defaultGameState))
                 .actualColor(PlayerColor.WHITE)
+                .whitePlayerTime(defaultTimeInSeconds)
+                .blackPlayerTime(defaultTimeInSeconds)
                 .build();
     }
 

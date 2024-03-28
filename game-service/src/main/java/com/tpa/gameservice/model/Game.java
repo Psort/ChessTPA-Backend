@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.Duration;
 import java.util.List;
 
 @Document(value = "game")
@@ -24,8 +23,8 @@ public class Game {
     private Player[] players;
     private PlayerColor actualColor;
     private GameType gameType;
-    private Duration whitePlayerTime;
-    private Duration blackPlayerTime;
+    private Double whitePlayerTime;
+    private Double blackPlayerTime;
     public void addGameStateToHistory(GameState gameState) {
         history.add(gameState);
     }
