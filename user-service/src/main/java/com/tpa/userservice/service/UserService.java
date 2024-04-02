@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -47,13 +48,21 @@ public class UserService {
                         .build())
                 .orElseThrow(() -> new UserRequestException("User does not exists"));
     }
+    public UserResponse getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> UserResponse.builder()
+                        .username(user.getUsername())
+                        .eloRating(user.getEloRating())
+                        .build())
+                .orElseThrow(() -> new UserRequestException("User does not exists"));
+    }
 
     public void addGame(NewGameRequest request) {
         String gameId = request.getGameId();
 
+
         Optional<User> optionalFirstPlayer = userRepository.findByUsername(request.getFirstPlayerUsername());
         Optional<User> optionalSecondPlayer = userRepository.findByUsername(request.getSecondPlayerUsername());
-
         if (optionalFirstPlayer.isPresent() && optionalSecondPlayer.isPresent()) {
 
             User firstPlayer = optionalFirstPlayer.get();
@@ -69,6 +78,11 @@ public class UserService {
 
             userRepository.saveAll(List.of(firstPlayer, secondPlayer));
 
+        }
+        else if (optionalFirstPlayer.isPresent() && Objects.equals(request.getSecondPlayerUsername(), "COMPUTER") ) {
+            User firstPlayer = optionalFirstPlayer.get();
+            firstPlayer.addGame(gameId);
+            userRepository.save(firstPlayer);
         } else {
            throw new UserRequestException("User does not exists");
         }
@@ -139,5 +153,9 @@ public class UserService {
                 .username(request.getUsername())
                 .eloRating(defaultEloRating)
                 .build();
+    }
+
+    public Double getUserByElo(String username) {
+        return getUserByUsername(username).getEloRating();
     }
 }

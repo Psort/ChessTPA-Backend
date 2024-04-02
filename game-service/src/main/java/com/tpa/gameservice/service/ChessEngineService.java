@@ -4,8 +4,7 @@ import com.chesstpa.board.Board;
 import com.chesstpa.board.Position;
 import com.chesstpa.board.Spot;
 import com.chesstpa.communication.ChessEngine;
-import com.chesstpa.pieces.PieceColor;
-import com.chesstpa.pieces.Rook;
+import com.chesstpa.pieces.*;
 import com.tpa.gameservice.dto.MoveRequest;
 import com.tpa.gameservice.dto.SafeGameStateRequest;
 import com.tpa.gameservice.model.Game;
@@ -41,25 +40,37 @@ public class ChessEngineService {
         String convertCastles = convertCastlesToString(castles);
         return chessEngine.getGameStatus(boardState, convertCastles,enPassantPosition, playerColor);
     }
-    private String convertCastlesToString(List<String> castles){
+    String convertCastlesToString(List<String> castles){
         return String.join("", castles);
     }
 
-    private String updateBoardState(String boardState,String enPassantPosition, Move move) {
+    private String updateBoardState(String boardState,String enPassantPosition, Move move,String newPawnType) {
         Board board = new Board();
         board.setBoardState(boardState,"");
         Position startPosition = convertCoordinatesToPosition(move.getStartingCoordinates());
         Position endPosition = convertCoordinatesToPosition(move.getEndingCoordinates());
         Spot spot = board.getSpot(startPosition.getX(),startPosition.getY());
-        board.getSpot(endPosition.getX(),endPosition.getY()).setPiece(spot.getPiece());
+
+        board.getSpot(endPosition.getX(),endPosition.getY()).setPiece(getNewPice(spot.getPiece(),newPawnType));
         updateEnPassantPosition(enPassantPosition, move, board, endPosition);
-        updateCastle(spot, startPosition, endPosition, board);
+        doCastleMove(spot, startPosition, endPosition, board);
         spot.setPiece(null);
 
         return board.spotsToBoardState();
     }
 
-    private static void updateCastle(Spot spot, Position startPosition, Position endPosition, Board board) {
+    private Piece getNewPice(Piece piece, String newPawnType) {
+        PieceColor color = piece.getColor();
+        return switch (newPawnType) {
+            case "Q" -> new Queen(color);
+            case "R" -> new Rook(color);
+            case "N" -> new Knight(color);
+            case "B" -> new Bishop(color);
+            default -> piece;
+        };
+    }
+
+    private static void doCastleMove(Spot spot, Position startPosition, Position endPosition, Board board) {
         if(spot.getPiece().getSimpleName() == 'k'){
             if (startPosition.getY() ==4 && endPosition.getY() == 6){
                 board.getSpot(endPosition.getX(), endPosition.getY()+1).setPiece(null);
@@ -82,6 +93,19 @@ public class ChessEngineService {
     private boolean IsValidMove(Set<PossibleMove> possibleMoves, Move move) {
         Position startPosition = convertCoordinatesToPosition(move.getStartingCoordinates());
         Position endPosition = convertCoordinatesToPosition(move.getEndingCoordinates());
+//        System.out.println(move.getStartingCoordinates()+move.getEndingCoordinates());
+//        System.out.println("start");
+//        System.out.println(startPosition.getX() + " "+ startPosition.getY());
+//        System.out.println("end");
+//        System.out.println(endPosition.getX() + " "+ endPosition.getY());
+//        System.out.println("posible");
+//        possibleMoves.forEach(possibleMove -> {
+//            System.out.println(possibleMove.piecePosition().getX()+ ""+ possibleMove.piecePosition().getY() +":" );
+//            possibleMove.possibleMovesForPiece().forEach(position -> {
+//                System.out.println(position.getX() +" " + position.getY());
+//            });
+//        });
+
         return possibleMoves.stream()
                 .anyMatch(possibleMove ->
                         possibleMove.piecePosition().getX() == startPosition.getX() &&
@@ -93,24 +117,52 @@ public class ChessEngineService {
     }
     protected SafeGameStateRequest getUpdatedSafeGameStateRequest(MoveRequest moveRequest, Game game) {
         GameState gameState = game.getHistory().get(game.getHistory().size()-1);
+        System.out.println(gameState);
         if (IsValidMove(gameState.getPossibleMoves(), moveRequest.getMove())){
             List<String> castleTypes = game.getHistory().get(game.getHistory().size()-1).getCastleTypes();
             List<String> updatedCastleType = calculateCastle(castleTypes, moveRequest.getMove().getStartingCoordinates());
-            String updatedBoardState = updateBoardState(gameState.getBoardState(),gameState.getEnPassantPosition(), moveRequest.getMove());
-            PlayerColor actualColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
+            String updatedBoardState = updateBoardState(gameState.getBoardState(),gameState.getEnPassantPosition(), moveRequest.getMove() ,moveRequest.getNewPawnType());
+            PlayerColor opponentColor = (game.getActualColor().equals(PlayerColor.WHITE)) ? PlayerColor.BLACK : PlayerColor.WHITE;
+            GameStatus gameStatus = convertStatus(getGameStatus(updatedBoardState,gameState.getCastleTypes(),gameState.getEnPassantPosition(), opponentColor.toString()));
             return SafeGameStateRequest.builder()
                     .gameId(moveRequest.getGameId())
-                    .gameStatus(convertStatus(getGameStatus(updatedBoardState,gameState.getCastleTypes(),gameState.getEnPassantPosition(), actualColor.toString())))
+                    .gameStatus(gameStatus)
                     .move(moveRequest.getMove())
                     .castleTypes(updatedCastleType)
                     .boardState(updatedBoardState)
                     .enPassantPosition( calculateEnPassantPosition(updatedBoardState,moveRequest.getMove()))
-                    .halfMovesCounter(calculateHalfMoves(gameState.getHalfMovesCounter()))
+                    .halfMovesCounter(calculateHalfMoves(gameState.getHalfMovesCounter(),gameState.getBoardState(),updatedBoardState,moveRequest.getMove()))
                     .fullMovesCounter(gameState.getFullMovesCounter()+1)
                     .build();
         }
         return null; // Todo --------------------------------------------------------------------------------------------------------------------
     }
+
+    private int calculateHalfMoves(int halfMovesCounter, String boardState, String updatedBoardState, Move move) {
+        Position endPosition = convertCoordinatesToPosition(move.getEndingCoordinates());
+        Board board = new Board();
+        Board updatedBoard = new Board();
+        board.setBoardState(boardState, "");
+        updatedBoard.setBoardState(updatedBoardState, "");
+        Spot spot = board.getSpot(endPosition.getX(), endPosition.getY());
+        Spot updatedSpot = updatedBoard.getSpot(endPosition.getX(), endPosition.getY());
+
+
+        if (updatedSpot.getPiece().getSimpleName() =='p') {
+            return 0;
+        }
+        if (spot.getPiece() != null && updatedSpot.getPiece() != null &&
+                updatedSpot.getPiece().getColor() != spot.getPiece().getColor()) {
+            return 0;
+        }
+        switch (move.getStartingCoordinates()) {
+            case "a1", "h1", "a8", "h8", "e1", "e8":
+                return 0;
+        }
+
+        return halfMovesCounter + 1;
+    }
+
 
     private String calculateEnPassantPosition(String boardState, Move move) {
         Board board = new Board();
@@ -120,8 +172,8 @@ public class ChessEngineService {
         Spot spotPiece = board.getSpot(endPosition.getX(),endPosition.getY());
         boolean startMove = ((startPosition.getX() == 1 && endPosition.getX() == 3)|| (startPosition.getX() == 6 && endPosition.getX() == 4));
         if (spotPiece != null && spotPiece.getPiece().getSimpleName() == 'p' && startMove) {
-            int enPassantX = (spotPiece.getPiece().getColor() == PieceColor.BLACK) ? endPosition.getX() - 1 : endPosition.getX() + 1;
-            return convertPositionToString( enPassantX,endPosition.getY());
+            int enPassantY = (spotPiece.getPiece().getColor() == PieceColor.BLACK) ? endPosition.getY() + 1 : endPosition.getY() - 1;
+            return convertPositionToString( endPosition.getX(),enPassantY);
         }
         return "";
     }
@@ -134,21 +186,19 @@ public class ChessEngineService {
     }
     private List<String> calculateCastle(List<String> castleTypes, String startingCoordinates) {
         switch (startingCoordinates) {
-            case "a1" -> castleTypes.remove("q");
-            case "h1" -> castleTypes.remove("k");
-            case "a8" -> castleTypes.remove("K");
-            case "h8" -> castleTypes.remove("Q");
-            case "e1" -> castleTypes.removeAll(List.of("k", "q"));
-            case "e8" -> castleTypes.removeAll(List.of("K", "Q"));
+            case "a1" -> castleTypes.remove("Q");
+            case "h1" -> castleTypes.remove("K");
+            case "a8" -> castleTypes.remove("k");
+            case "h8" -> castleTypes.remove("q");
+            case "e1" -> castleTypes.removeAll(List.of("K", "Q"));
+            case "e8" -> castleTypes.removeAll(List.of("k", "q"));
         }
         return castleTypes;
     }
-    private int calculateHalfMoves(int halfMovesCounter) {
-        return halfMovesCounter+1;
-    }//Todo----------------------------------------------------------------------
     public String convertPositionToString(int x, int y) {
         int number = x + 1;
         char letter = (char) ('a' + y);
         return String.valueOf(letter) + number;
     }
+
 }

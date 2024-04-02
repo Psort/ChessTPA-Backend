@@ -8,14 +8,12 @@ import com.chesstpa.communication.ChessEngine;
 import com.chesstpa.pieces.PieceColor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tpa.gameservice.dto.GameResponse;
-import com.tpa.gameservice.dto.MoveRequest;
-import com.tpa.gameservice.dto.NewGameRequest;
-import com.tpa.gameservice.dto.SafeGameStateRequest;
+import com.tpa.gameservice.dto.*;
 import com.tpa.gameservice.model.*;
 import com.tpa.gameservice.repository.GameRepository;
 import com.tpa.gameservice.type.CastleType;
 import com.tpa.gameservice.type.GameStatus;
+import com.tpa.gameservice.type.GameType;
 import com.tpa.gameservice.type.PlayerColor;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
@@ -37,18 +35,16 @@ public class GameService {
     @Transactional
     @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
     public Game createGame(NewGameRequest newGameRequest) {
-
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
-
-        Game game = createDefaulttdGame( firstPlayer,secondPlayer);
-
+        Game game=createDefaulttdGame(firstPlayer, secondPlayer, newGameRequest.getGameType());
         gameRepository.save(game);
 
         webClientService.sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
 
         return game;
     }
+
 
     public List<GameResponse> getAllGamesForUser(String username) {
         List<Game> optionalGames = gameRepository.findByPlayersUsernameAndHistoryStatusIsNotIn(username,List.of("CHECKMATE","PAT"));
@@ -87,12 +83,17 @@ public class GameService {
     }
 
     private GameState createGameState(SafeGameStateRequest safeGameStateRequest, PlayerColor actualColor) {
+        Set<PossibleMove> possibleMoves = chessEngineService.getPossiblesMoves(
+                safeGameStateRequest.getBoardState(),
+                actualColor,
+                safeGameStateRequest.getEnPassantPosition(),
+                safeGameStateRequest.getCastleTypes());
         return GameState.builder()
                 .boardState(safeGameStateRequest.getBoardState())
                 .status(safeGameStateRequest.getGameStatus())
                 .move(safeGameStateRequest.getMove())
                 .castleTypes(safeGameStateRequest.getCastleTypes())
-                .possibleMoves(chessEngineService.getPossiblesMoves(safeGameStateRequest.getBoardState(), actualColor, safeGameStateRequest.getEnPassantPosition(),safeGameStateRequest.getCastleTypes()))
+                .possibleMoves(possibleMoves)
                 .fullMovesCounter(safeGameStateRequest.getFullMovesCounter())
                 .halfMovesCounter(safeGameStateRequest.getHalfMovesCounter())
                 .enPassantPosition(safeGameStateRequest.getEnPassantPosition())
@@ -114,7 +115,54 @@ public class GameService {
             Game game = optionalGame.get();
             SafeGameStateRequest safeGameStateRequest = chessEngineService.getUpdatedSafeGameStateRequest(moveRequest, game);
             safeGameState(safeGameStateRequest);
+            if(game.getGameType() == GameType.COMPUTER){
+                Game nextGame = gameRepository.findById(moveRequest.getGameId()).get();
+                String username = getHumanPlayer(game).getUsername();
+                Double eloRating =  webClientService.getUserEloRating(username);
+                ComputerMoveRequest computerMoveRequest = createComputerMoveRequest(safeGameStateRequest,game,eloRating);
+                String move = webClientService.getComputerMove(computerMoveRequest);
+                MoveRequest nextMoveRequest =  convertMoveToMoveRequest(move);
+                nextMoveRequest.setGameId(nextGame.getId());
+                SafeGameStateRequest nextSafeGameStateRequest =chessEngineService.getUpdatedSafeGameStateRequest(nextMoveRequest, nextGame);
+                safeGameState(nextSafeGameStateRequest);
+            }
         }
+    }
+
+    private MoveRequest convertMoveToMoveRequest(String stringMove) {
+        int halfLength = stringMove.length() / 2;
+
+        String startingCoordinates = stringMove.substring(0, halfLength);
+        String endingCoordinates = stringMove.substring(halfLength);
+
+        Move move = Move.builder().startingCoordinates(startingCoordinates).endingCoordinates(endingCoordinates).build();
+        return MoveRequest.builder().move(move).build();
+    }
+
+    private static Player getHumanPlayer(Game game) {
+        return Arrays.stream(game.getPlayers())
+                .filter(p -> !Objects.equals(p.getUsername(), "COMPUTER"))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private ComputerMoveRequest createComputerMoveRequest(SafeGameStateRequest safeGameStateRequest, Game game,Double eloRating) {
+        String color = game.getActualColor() == PlayerColor.WHITE ? "b": "w";
+        StringBuilder fenBody = new StringBuilder();
+        String castle = Objects.equals(chessEngineService.convertCastlesToString(safeGameStateRequest.getCastleTypes()), "") ? "-":chessEngineService.convertCastlesToString(safeGameStateRequest.getCastleTypes());
+        String enPassantPosition = Objects.equals(safeGameStateRequest.getEnPassantPosition(), "") ? "-" : safeGameStateRequest.getEnPassantPosition();
+        fenBody.append(safeGameStateRequest.getBoardState());
+        fenBody.append(" ");
+        fenBody.append(color);
+        fenBody.append(" ");
+        fenBody.append(castle);
+        fenBody.append(" ");
+        fenBody.append(enPassantPosition);
+        fenBody.append(" ");
+        fenBody.append(safeGameStateRequest.getHalfMovesCounter());
+        fenBody.append(" ");
+        fenBody.append(safeGameStateRequest.getFullMovesCounter());
+        return ComputerMoveRequest.builder().eloRating(eloRating.toString()).fenBody(fenBody.toString()).build();
     }
 
     private String convertToGameResponseAsJson(GameResponse gameResponse) {
@@ -126,11 +174,12 @@ public class GameService {
             return null;
         }
     }
-    private Game createDefaulttdGame(Player firstPlayer,Player secondPlayer){
+    private Game createDefaulttdGame(Player firstPlayer, Player secondPlayer, GameType gameType){
         GameState defaultGameState = createDefaulGameState();
         return Game.builder()
                 .players(new Player[]{firstPlayer, secondPlayer})
                 .history(List.of(defaultGameState))
+                .gameType(gameType)
                 .actualColor(PlayerColor.WHITE)
                 .build();
     }

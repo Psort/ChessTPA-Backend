@@ -10,7 +10,8 @@ public enum GameType {
     THREE(3),
     FIVE(5),
     TEN(10),
-    INFINITE(0);
+    INFINITE(0),
+    COMPUTER(0);
     private final int minutes;
 
 }

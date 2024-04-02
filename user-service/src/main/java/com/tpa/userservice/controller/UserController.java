@@ -29,6 +29,12 @@ public class UserController {
         UserResponse userResponse = userService.getUserByEmail(email);
         return ResponseEntity.ok(userResponse);
     }
+    @GetMapping("/elo")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Double> getUserElo(@RequestParam String username){
+        Double elo = userService.getUserByElo(username);
+        return ResponseEntity.ok(elo);
+    }
 
     @PostMapping("/game")
     @ResponseStatus(HttpStatus.OK)

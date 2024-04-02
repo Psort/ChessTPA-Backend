@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @Data
 public class Move {
-    private Player player;
     private String startingCoordinates;
     private String endingCoordinates;
 }
