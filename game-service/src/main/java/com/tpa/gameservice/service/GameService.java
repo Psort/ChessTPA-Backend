@@ -1,11 +1,6 @@
 package com.tpa.gameservice.service;
 
 
-import com.chesstpa.board.Board;
-import com.chesstpa.board.Position;
-import com.chesstpa.board.Spot;
-import com.chesstpa.communication.ChessEngine;
-import com.chesstpa.pieces.PieceColor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tpa.gameservice.dto.*;
@@ -35,9 +30,13 @@ public class GameService {
     @Transactional
     @CircuitBreaker(name = "user-service", fallbackMethod = "fallback")
     public Game createGame(NewGameRequest newGameRequest) {
+
         Player firstPlayer = Player.builder().username(newGameRequest.getFirstPlayerUsername()).color(PlayerColor.WHITE).build();
         Player secondPlayer = Player.builder().username(newGameRequest.getSecondPlayerUsername()).color(PlayerColor.BLACK).build();
         Game game=createDefaulttdGame(firstPlayer, secondPlayer, newGameRequest.getGameType());
+
+        Game game = createDefaultGame(firstPlayer, secondPlayer, newGameRequest.getGameType());
+
         gameRepository.save(game);
 
         webClientService.sendGameToUserService(game.getId(), firstPlayer.getUsername(), secondPlayer.getUsername());
@@ -174,13 +173,19 @@ public class GameService {
             return null;
         }
     }
+    private Game createDefaultGame(Player firstPlayer, Player secondPlayer, GameType gameType) {
+        Double defaultTimeInSeconds = (double) (gameType.getMinutes() * 60);
+
     private Game createDefaulttdGame(Player firstPlayer, Player secondPlayer, GameType gameType){
+            Double defaultTimeInSeconds = (double) (gameType.getMinutes() * 60);
         GameState defaultGameState = createDefaulGameState();
         return Game.builder()
                 .players(new Player[]{firstPlayer, secondPlayer})
                 .history(List.of(defaultGameState))
                 .gameType(gameType)
                 .actualColor(PlayerColor.WHITE)
+                .whitePlayerTime(defaultTimeInSeconds)
+                .blackPlayerTime(defaultTimeInSeconds)
                 .build();
     }
 
